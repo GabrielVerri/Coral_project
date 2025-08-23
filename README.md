@@ -1,2 +1,2 @@
 # Coral_project
-Entrega compiladores e linguagens formais
+Entrega da matéria compiladores e linguagens formais e automatos
