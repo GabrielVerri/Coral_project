@@ -1,0 +1,43 @@
+## **Função simples**
+
+FUNCAO saudacao(nome):  
+    escreva("Olá, " \+ nome)
+
+## **Estrutura Condicional**
+
+idade \= leia("Digite sua idade: ")
+
+SE idade \>= 18:  
+    escreva("Você é maior de idade.")  
+SENAO:  
+    escreva("Você é menor de idade.")
+
+## **Estrutura de Repetição**
+
+contador \= 0  
+ENQUANTO contador \< 5:  
+    escreva("Número: " \+ contador)  
+    contador \= contador \+ 1
+
+## **Exemplo de um prgrama completo**
+
+continuar = VERDADEIRO
+
+ENQUANTO continuar:
+    TENTE:
+        numero = INTEIRO(ENTRADA("Digite um numero: "))
+    
+        SE numero % 2 == 0:
+            IMPRIMIR(f"O número {numero} é par\n")
+        SENAO:
+            IMPRIMIR(f"O número {numero} é ímpar\n")
+            
+    EXCETO ErroDeValor:
+        IMPRIMIR("Erro: Por favor, insira um número válido.\n")
+        CONTINUE
+
+    x = INTEIRO(ENTRADA("1- Sim\n2- Nao\nDeseja continuar? ")).MAIUSCULAS()
+    SE x == 1:
+        continuar = VERDADEIRO
+    SENAO:
+        continuar = FALSO
