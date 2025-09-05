@@ -4,23 +4,23 @@
 
 ## **Alfabetos**
 
-letras \= {a,...,z,A,...Z} (26 x 2 \= 52\)  
+letras \= {a,...,z,A,...Z}  
 numeros \= {0,...,9}  
 operador \= {+, −, \*, /, \=, \>, \<,\!}  
 especial \= {espaco,newline,tab,underscore,{,},\[,\],%,&,(,),|,;,.,,}
 
 ## **Tokens**
 
-Identificadores \= {(letras ∪ ‘\_‘) • (letras ∪ numeros ∪ ’\_’)\* }  
-Operadores lógicos={E, OU, NAO}  
-Operadores booleanos \= {VERDADE, FALSO}  
-Operadores aritméticos relacionais \= (\\+\\+|\\+=|\\+|--|-=|-|\\\*\\\*|\\\*=|\\\*|/=|/|%=|%|==|\!=|\<=|\>=|=|\>|\<|\!)  
-Comentários em linha  \= {\# • alfabetoCoral}  
-string literal \= {“ • ((alfabetoCoral) \-(” ∪ newline))\* • “ ,’ • ((alfabetoCoral) \- (’ ∪ newline))\* • ‘,””” • ((alfabetoCoral) \-(”””))\* • ””” ,’’’• ((alfabetoCoral) \-(’’’))\* • ’’’,}  
-decimal \= {numeros+  ∪ ‘.’ ∪ numeros+}  
+Identificadores \= \[a-zA-Z\_\]\[a-zA-Z0-9\_\]\*  
+Operadores lógicos \= \\b(E|OU|NAO)\\b  
+Operadores booleanos \= \\b(VERDADE|FALSO)\\b  
+Operadores aritméticos relacionais \= (\\\*\\\*|\\\*\\\*=|==|\!=|\<=|\>=|\\+=|-=|\\\*=|/=|%=|\\+\\+|--|\\+|\\-|\\\*|/|%|=|\!|\<|\>)  
+Comentários em linha  \= \\\#.\*  
+string literal \= ("(\[^"\\n\])\*"|'(\[^'\\n\])\*'|"""(\[^"\]|("(?\!"")))\*"""|'''(\[^'\]|('(?\!'')))\*''')  
+decimal \= \[0-9\]+\\.\[0-9\]+  
 Variaveis \= Identificadores
 
-palavras reservadas={FALSO, ESPERA, SENAO, IMPORTAR, PASSAR, VAZIO, QUEBRA, EXCETO, DENTRODE, LANCAR, VERDADE, CLASSE, FINALMENTE, EIGUAL, RETORNAR, E, CONTINUA, PARA, LAMBDA, TENTE, COMO, DEF, DE, NAOLOCAL, ENQUANTO, AFIRMA, DELETAR, GLOBAL, NAO, COM, ASSINCRONO, SENAOSE, SE, OU, ENVIAR}
+palavras reservadas \= \\b(FALSO|ESPERA|SENAO|IMPORTAR|PASSAR|VAZIO|QUEBRA|EXCETO|DENTRODE|LANCAR|VERDADE|CLASSE|FINALMENTE|EIGUAL|RETORNAR|E|CONTINUA|PARA|LAMBDA|TENTE|COMO|DEF|DE|NAOLOCAL|ENQUANTO|AFIRMA|DELETAR|GLOBAL|NAO|COM|ASSINCRONO|SENAOSE|SE|OU|ENVIAR)\\b
 
 # **2\. Gramática livre de contexto**
 
@@ -87,9 +87,9 @@ y \= \-1
 
 Derivação (alto nível):
 
-- Comando ⇒ SE  
-- Se ⇒ SE Expressao ":" Bloco { SENAOSE ... } \[ SENAO ... \]  
-- Cada Bloco ⇒ newline INDENTA { Atribuicao } DEDENTA
+* Comando ⇒ SE  
+* Se ⇒ SE Expressao ":" Bloco { SENAOSE ... } \[ SENAO ... \]  
+* Cada Bloco ⇒ newline INDENTA { Atribuicao } DEDENTA
 
 A construção { SENAOSE ... } elimina o clássico dangling else.
 
@@ -119,4 +119,11 @@ i \+= 1
      
 4. **Indentação**  
    Risco: contagem de espaços/tabulações. Estratégia: lexer gera INDENTA/DEDENTA consistentes (pilha de níveis). Mistura de TAB/ESPAÇO proibida.  
-   
+     
+5. **Ambiguidade entre Identificadores e Palavras Reservadas**  
+   Risco: A sobreposição entre a expressão regular para Identificadores e as strings literais das Palavras Reservadas. Por exemplo, a string SE atende à definição de um identificador, mas também é uma palavra reservada da linguagem. Isso pode levar o analisador léxico a interpretar o token de forma incorreta  
+   Solução : A regra de precedência para o analisador léxico é que as Palavras Reservadas têm precedência sobre os Identificadores
+
+6. **Precedência entre Identificadores e Palavras Reservadas**  
+   Risco: Ocorre uma ambiguidade léxica, pois a expressão regular genérica para Identificadores também reconhece as strings que são Palavras Reservadas  
+   Solução: Para garantir essa prioridade na implementação, a expressão regular para cada palavra reservada utiliza o delimitador de fronteira de palavra \\b
