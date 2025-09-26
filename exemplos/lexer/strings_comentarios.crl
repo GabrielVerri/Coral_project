@@ -1,0 +1,18 @@
+# Teste de strings e comentários
+nome = "Alice"
+sobrenome = 'Silva'  # teste com aspas simples
+
+# Teste de comentário em linha
+mensagem = "Olá " + nome + " " + sobrenome
+
+# Teste de quebra de linha em string
+endereco = "Rua das Flores, 123
+Bairro Centro"
+
+# Teste de caracteres especiais em strings
+especial = "Símbolo de @, # e $ em strings não são comentários"
+
+### Teste de múltiplos comentários ###
+# Linha 1
+# Linha 2
+# Linha 3

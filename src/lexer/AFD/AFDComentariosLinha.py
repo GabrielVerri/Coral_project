@@ -13,8 +13,21 @@ class AFDComentariosLinha:
         classe_entrada = caractere if caractere == '#' else 'outro'
         self.estado_atual = self.transicoes[self.estado_atual].get(classe_entrada, 'q2')
 
-    def aceita(self, entrada):
+    def match(self, entrada):
         self.estado_atual = 'q0'
+        lexema = ''
+        i = 0
         for caractere in entrada:
+            # se iniciar com '#', aceita todo até nova linha
+            if i == 0 and caractere != '#':
+                return None
             self.transicao(caractere)
-        return self.estado_atual in self.estados_aceitacao
+            lexema += caractere
+            i += 1
+            if caractere == '\n':
+                break
+
+        if i > 0 and lexema.startswith('#'):
+            return (lexema, i, 'COMENTARIO_LINHA')
+
+        return None

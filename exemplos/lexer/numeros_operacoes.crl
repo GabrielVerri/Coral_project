@@ -1,0 +1,20 @@
+# Teste de números e operações aritméticas
+numero_inteiro = 42
+numero_decimal = 3.14
+
+# Operações básicas
+soma = numero_inteiro + 10
+subtracao = numero_decimal - 1.5
+multiplicacao = 2 * numero_inteiro
+divisao = numero_decimal / 2.0
+
+# Operadores compostos
+contador = 0
+contador += 1
+contador -= 1
+contador *= 2
+contador /= 2
+
+# Incremento/decremento
+contador++
+contador--

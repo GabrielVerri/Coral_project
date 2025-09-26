@@ -1,0 +1,15 @@
+# Teste de operadores lógicos e booleanos
+x = VERDADE
+y = FALSO
+
+SE (x E y) {
+    ESCREVA("ambos verdadeiros")
+} SENAO {
+    SE (x OU y) {
+        ESCREVA("pelo menos um verdadeiro")
+    } SENAO {
+        SE (NAO x) {
+            ESCREVA("x é falso")
+        }
+    }
+}

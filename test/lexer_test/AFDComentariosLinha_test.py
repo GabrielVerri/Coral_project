@@ -1,14 +1,45 @@
-from src.lexer import AFDComentariosLinha
+import unittest
+from src.lexer.AFD.AFDComentariosLinha import AFDComentariosLinha
 
-print("=== Iniciando testes do AFD de Comentários em Linha ===")
-afd_comentarios = AFDComentariosLinha()
-testes_comentarios = [
-    ("#teste", True, "aceito como Comentário em Linha"),
-    ("#", True, "aceito como Comentário em Linha"),
-    ("abc", False, "rejeitado (não começa com #)"),
-    ("", False, "rejeitado (string vazia)")
-]
+class TestAFDComentariosLinha(unittest.TestCase):
+    """Testes unitários para o AFD de comentários em linha."""
+    
+    def setUp(self):
+        """Inicializa um AFD novo para cada teste."""
+        self.afd = AFDComentariosLinha()
+    
+    def test_comentario_simples(self):
+        """Testa reconhecimento de comentário simples."""
+        entrada = "#teste"
+        resultado = self.afd.match(entrada)
+        self.assertIsNotNone(resultado, "Deveria reconhecer um comentário válido")
+        self.assertEqual(resultado[2], "COMENTARIO_LINHA", "Tipo do token deveria ser COMENTARIO_LINHA")
+        
+    def test_comentario_vazio(self):
+        """Testa reconhecimento de comentário sem conteúdo."""
+        entrada = "#"
+        resultado = self.afd.match(entrada)
+        self.assertIsNotNone(resultado, "Deveria reconhecer um comentário vazio")
+        self.assertEqual(resultado[2], "COMENTARIO_LINHA", "Tipo do token deveria ser COMENTARIO_LINHA")
+        
+    def test_nao_comentario(self):
+        """Testa rejeição de string que não é comentário."""
+        entrada = "abc"
+        resultado = self.afd.match(entrada)
+        self.assertIsNone(resultado, "Não deveria reconhecer texto sem #")
+        
+    def test_string_vazia(self):
+        """Testa rejeição de string vazia."""
+        entrada = ""
+        resultado = self.afd.match(entrada)
+        self.assertIsNone(resultado, "Não deveria reconhecer string vazia")
+        
+    def test_comentario_com_espacos(self):
+        """Testa reconhecimento de comentário com espaços."""
+        entrada = "# teste com espaços"
+        resultado = self.afd.match(entrada)
+        self.assertIsNotNone(resultado, "Deveria reconhecer comentário com espaços")
+        self.assertEqual(resultado[2], "COMENTARIO_LINHA", "Tipo do token deveria ser COMENTARIO_LINHA")
 
-for entrada, esperado, descricao in testes_comentarios:
-    resultado = afd_comentarios.aceita(entrada)
-    print(f"Teste {'passou' if resultado == esperado else 'falhou'}: '{entrada}' {descricao}, resultado: {resultado}")
+if __name__ == '__main__':
+    unittest.main()

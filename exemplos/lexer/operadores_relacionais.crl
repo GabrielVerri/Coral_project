@@ -1,0 +1,35 @@
+# Teste de operadores relacionais e estruturas de controle
+idade = 18
+salario = 1500.50
+tem_carteira = VERDADE
+
+# Testes com operadores relacionais
+SE (idade >= 18) {
+    ESCREVA("maior de idade")
+}
+
+SE (salario <= 1000.00) {
+    ESCREVA("salário até 1000")
+} SENAOSE (salario <= 2000.00) {
+    ESCREVA("salário até 2000")
+} SENAO {
+    ESCREVA("salário acima de 2000")
+}
+
+# Combinação de operadores
+SE (idade >= 18 E tem_carteira == VERDADE) {
+    ESCREVA("pode dirigir")
+}
+
+# Teste de diferentes comparações
+a = 10
+b = 20
+SE (a != b) {
+    ESCREVA("números diferentes")
+}
+SE (a < b) {
+    ESCREVA("a menor que b")
+}
+SE (a > b) {
+    ESCREVA("a maior que b")
+}
