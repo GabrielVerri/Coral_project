@@ -25,14 +25,14 @@ __all__ = [
 
 # Lista de AFDs na ordem de prioridade que serão usados pelo scanner
 _afds = [
-    (AFDComentariosLinha, "Comentários de linha"),
-    (AFDStringLiteral, "Strings literais"), 
-    (AFDSimbolos, "Símbolos/pontuação"),
-    (AFDDecimal, "Números (inteiros e decimais)"),
-    (AFDOperadoresAritmeticosRelacionais, "Operadores aritméticos/relacionais"),
-    (AFDOperadoresLogicos, "Operadores lógicos"),
-    (AFDOperadoresBooleanos, "Operadores booleanos"),
-    (AFDIdentificadores, "Identificadores e palavras reservadas")
+    (AFDComentariosLinha, "Comentários de linha"),          # 1. Comentários (padrão claro, ignora o resto)
+    (AFDStringLiteral, "Strings literais"),                 # 2. Strings (padrão delimitado, evita conflitos)
+    (AFDIdentificadores, "Identificadores e palavras reservadas"),  # 3. Identificadores (deve vir cedo para rejeitar inválidos)
+    (AFDSimbolos, "Símbolos/pontuação"),                    # 4. Símbolos (caracteres simples como '(', ')', evita conflitos com operadores)
+    (AFDOperadoresAritmeticosRelacionais, "Operadores aritméticos/relacionais"),  # 5. Operadores compostos (ex.: ==, <=)
+    (AFDOperadoresLogicos, "Operadores lógicos"),           # 6. Operadores lógicos (ex.: E, OU, NAO)
+    (AFDOperadoresBooleanos, "Operadores booleanos"),       # 7. Operadores booleanos (ex.: VERDADE, FALSO)
+    (AFDDecimal, "Números (inteiros e decimais)")           # 8. Números (deve vir por último para evitar consumir partes de identificadores)
 ]
 
 def get_afds():

@@ -6,11 +6,14 @@ sobrenome = 'Silva'  # teste com aspas simples
 mensagem = "Olá " + nome + " " + sobrenome
 
 # Teste de quebra de linha em string
-endereco = "Rua das Flores, 123
-Bairro Centro"
+
 
 # Teste de caracteres especiais em strings
 especial = "Símbolo de @, # e $ em strings não são comentários"
+
+menu = """
+    TESTE DE MENU
+"""
 
 ### Teste de múltiplos comentários ###
 # Linha 1

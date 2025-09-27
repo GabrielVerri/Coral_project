@@ -1,0 +1,8 @@
+# Programa que deveria verificar duas condições
+a = VERDADE
+b = FALSO
+
+# Erro: && não existe em Coral, deveria ser 'E'
+SE (a && b) {
+    ESCREVA("ambos verdadeiros")
+}
