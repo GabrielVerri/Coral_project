@@ -65,7 +65,6 @@ class Scanner:
                     
                     # se for identificador, checa se é palavra reservada
                     if tipo == "IDENTIFICADOR":
-                        # verifica se é palavra reservada
                         if lexema in self.palavras_reservadas:
                             tipo = "PALAVRA_RESERVADA"
                     
@@ -75,7 +74,6 @@ class Scanner:
                     self._avancar(tamanho)
                     break
             
-            # se nenhum AFD reconheceu, erro
             if not resultado:
                 raise ValueError(
                     f"Token inválido na linha {self.linha}, coluna {self.coluna}: '{char}'"
