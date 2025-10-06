@@ -1,6 +1,6 @@
 import unittest
 from src.lexer.AFN.AFNCoralUnificado import AFNCoralUnificado
-from src.lexer.conversores.ConversorAFNparaAFD import ConversorAFNparaAFD
+from src.lexer.conversor.ConversorAFNparaAFD import ConversorAFNparaAFD
 from src.lexer.AFD.AFDUnificado import AFDUnificado
 
 class TestAFNAFDUnificado(unittest.TestCase):

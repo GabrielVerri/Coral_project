@@ -1,4 +1,11 @@
-from ..AFN import AFNTransicoes
+import sys
+import os
+
+# Adiciona o diretório src ao path do Python para imports
+src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, src_dir)
+
+from lexer.AFN import AFNTransicoes, AFNCoralUnificado
 
 class ConversorAFNparaAFD:
     """Converte AFN em AFD usando algoritmo de construção de subconjuntos."""
@@ -72,3 +79,9 @@ class ConversorAFNparaAFD:
     def get_estados_aceitacao_afd(self):
         """Retorna os estados de aceitação do AFD resultante."""
         return self.afd_estados_aceitacao
+
+if __name__ == "__main__":
+    afn = AFNCoralUnificado()
+    
+    conversor = ConversorAFNparaAFD(afn)
+    conversor.construir_subconjuntos()

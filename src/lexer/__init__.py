@@ -1,3 +1,3 @@
-from .scanner import Scanner
+from .lexer import Scanner, CoralLexer
 
-__all__ = ["Scanner"]
+__all__ = ["Scanner", "CoralLexer"]

@@ -3,7 +3,7 @@ Pacote de AFDs do lexer. Usa o AFD unificado criado a partir da conversão AFN->
 """
 
 from ..AFN import AFNCoralUnificado
-from ..conversores import ConversorAFNparaAFD
+from ..afn_to_afd import ConversorAFNparaAFD
 from .AFDUnificado import AFDUnificado
 
 __all__ = [
