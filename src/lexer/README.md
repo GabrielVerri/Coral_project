@@ -5,12 +5,12 @@
 Para executar o analisador léxico em um arquivo fonte:
 
 ```bash
-python src/lexer/main.py <arquivo.crl>
+python src/lexer/lexer.py <arquivo.crl>
 ```
 
 Por exemplo:
 ```bash
-python src/lexer/main.py exemplos/ola_mundo.crl
+python src/lexer/lexer.py .\exemplos\lexer\ola_mundo_correto.crl
 ```
 
 ## Formato da Saída
