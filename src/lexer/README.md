@@ -10,7 +10,7 @@ python src/lexer/lexer.py <arquivo.crl>
 
 Por exemplo:
 ```bash
-python src/lexer/lexer.py .\exemplos\lexer\ola_mundo_correto.crl
+python src/lexer/lexer.py exemplos/lexer/ola_mundo_correto.crl
 ```
 
 ## Formato da Saída
@@ -20,14 +20,16 @@ O analisador gera uma tabela com duas colunas mostrando os tokens reconhecidos:
 ```
 TOKEN                | TIPO
 ----------------------------------------
-ESCREVA             | PALAVRA_RESERVADA
-(                   | SIMBOLO
-"Olá mundo"         | STRING
-)                   | SIMBOLO
+ESCREVA              | IDENTIFICADOR
+(                    | DELIMITADOR
+"Olá mundo"          | STRING
+)                    | DELIMITADOR
 ```
+
+## Tratamento de Erros
 
 Em caso de erro léxico (token inválido), será mostrada a linha e coluna do erro:
 
 ```
-Erro léxico: Token inválido na linha 1, coluna 1: 'ESCREV'
+Erro léxico: Token inválido na linha 2, coluna 5: '@'
 ```

@@ -13,18 +13,18 @@ sys.path.insert(0, src_dir)
 # Importa os AFDs necessários
 from lexer.AFD import get_afds
 
-class Scanner:
-    """Scanner/Tokenizador para a linguagem Coral."""
+class AnalisadorLexico:
+    """Analisador léxico/Tokenizador para a linguagem Coral."""
     
-    def __init__(self, source):
+    def __init__(self, codigo_fonte):
         """
-        Inicializa o scanner com o código fonte.
+        Inicializa o analisador léxico com o código fonte.
         
         Args:
-            source (str): Código fonte em Coral para tokenizar
+            codigo_fonte (str): Código fonte em Coral para tokenizar
         """
-        self.source = source
-        self.pos = 0
+        self.codigo_fonte = codigo_fonte
+        self.posicao = 0
         self.linha = 1
         self.coluna = 1
         
@@ -44,11 +44,11 @@ class Scanner:
         # Obtém lista de AFDs na ordem de prioridade
         self.afds = get_afds()
 
-    def _eh_alfanumerico_ou_underscore(self, char):
+    def _eh_alfanumerico_ou_underscore(self, caractere):
         """Verifica se o caractere é alfanumérico ou underscore."""
-        return char.isalnum() or char == '_'
+        return caractere.isalnum() or caractere == '_'
     
-    def tokenize(self):
+    def tokenizar(self):
         """
         Realiza a tokenização do código fonte.
         
@@ -60,33 +60,33 @@ class Scanner:
         """
         tokens = []
         
-        while self.pos < len(self.source):
-            char = self.source[self.pos]
+        while self.posicao < len(self.codigo_fonte):
+            caractere = self.codigo_fonte[self.posicao]
             
             # Ignora espaços em branco e quebras de linha
-            if char.isspace():
+            if caractere.isspace():
                 self._avancar(1)
                 continue
             
             # Tenta reconhecer token com cada AFD
             resultado = None
             for afd in self.afds:
-                resultado = afd.match(self.source[self.pos:])
+                resultado = afd.match(self.codigo_fonte[self.posicao:])
                 if resultado:
                     lexema, tamanho, tipo = resultado
                     
                     # Validação especial: número seguido de letra/underscore = erro
                     if tipo in ("INTEIRO", "DECIMAL"):
-                        proxima_pos = self.pos + tamanho
-                        if proxima_pos < len(self.source):
-                            proximo_char = self.source[proxima_pos]
-                            if self._eh_alfanumerico_ou_underscore(proximo_char):
+                        proxima_posicao = self.posicao + tamanho
+                        if proxima_posicao < len(self.codigo_fonte):
+                            proximo_caractere = self.codigo_fonte[proxima_posicao]
+                            if self._eh_alfanumerico_ou_underscore(proximo_caractere):
                                 # Encontra onde termina a sequência inválida
-                                fim_seq = proxima_pos
-                                while (fim_seq < len(self.source) and 
-                                       self._eh_alfanumerico_ou_underscore(self.source[fim_seq])):
-                                    fim_seq += 1
-                                sequencia_invalida = self.source[self.pos:fim_seq]
+                                fim_sequencia = proxima_posicao
+                                while (fim_sequencia < len(self.codigo_fonte) and 
+                                       self._eh_alfanumerico_ou_underscore(self.codigo_fonte[fim_sequencia])):
+                                    fim_sequencia += 1
+                                sequencia_invalida = self.codigo_fonte[self.posicao:fim_sequencia]
                                 raise ValueError(
                                     f"Token inválido na linha {self.linha}, coluna {self.coluna}: "
                                     f"'{sequencia_invalida}' - números não podem ser seguidos por letras"
@@ -107,32 +107,32 @@ class Scanner:
             # Se nenhum AFD reconheceu o token
             if not resultado:
                 raise ValueError(
-                    f"Token inválido na linha {self.linha}, coluna {self.coluna}: '{char}'"
+                    f"Token inválido na linha {self.linha}, coluna {self.coluna}: '{caractere}'"
                 )
         
         return tokens
     
-    def _avancar(self, n):
-        """Avança n posições no código fonte, atualizando linha e coluna."""
-        for _ in range(n):
-            if self.pos < len(self.source):
-                if self.source[self.pos] == "\n":
+    def _avancar(self, quantidade):
+        """Avança quantidade de posições no código fonte, atualizando linha e coluna."""
+        for _ in range(quantidade):
+            if self.posicao < len(self.codigo_fonte):
+                if self.codigo_fonte[self.posicao] == "\n":
                     self.linha += 1
                     self.coluna = 1
                 else:
                     self.coluna += 1
-                self.pos += 1
+                self.posicao += 1
 
-class CoralLexer:
+class LexerCoral:
     """Interface principal do analisador léxico da linguagem Coral."""
     
     @staticmethod
-    def analyze_file(filename):
+    def analisar_arquivo(nome_arquivo):
         """
         Analisa um arquivo Coral e retorna os tokens.
         
         Args:
-            filename (str): Caminho para o arquivo .coral
+            nome_arquivo (str): Caminho para o arquivo .coral
             
         Returns:
             list: Lista de tokens (lexema, tipo)
@@ -142,21 +142,21 @@ class CoralLexer:
             ValueError: Se houver erro léxico
         """
         try:
-            with open(filename, "r", encoding="utf-8") as f:
-                source = f.read()
+            with open(nome_arquivo, "r", encoding="utf-8") as f:
+                codigo_fonte = f.read()
         except FileNotFoundError:
-            raise FileNotFoundError(f"Arquivo {filename} não encontrado.")
+            raise FileNotFoundError(f"Arquivo {nome_arquivo} não encontrado.")
         
-        scanner = Scanner(source)
-        return scanner.tokenize()
+        analisador = AnalisadorLexico(codigo_fonte)
+        return analisador.tokenizar()
     
     @staticmethod
-    def analyze_string(source):
+    def analisar_string(codigo_fonte):
         """
         Analisa uma string de código Coral e retorna os tokens.
         
         Args:
-            source (str): Código fonte em Coral
+            codigo_fonte (str): Código fonte em Coral
             
         Returns:
             list: Lista de tokens (lexema, tipo)
@@ -164,8 +164,8 @@ class CoralLexer:
         Raises:
             ValueError: Se houver erro léxico
         """
-        scanner = Scanner(source)
-        return scanner.tokenize()
+        analisador = AnalisadorLexico(codigo_fonte)
+        return analisador.tokenizar()
 
 def main():
     """Função principal para execução via linha de comando."""
@@ -173,19 +173,17 @@ def main():
         print("Uso: python lexer.py <arquivo.coral>")
         sys.exit(1)
 
-    filename = sys.argv[1]
+    nome_arquivo = sys.argv[1]
     
     try:
-        tokens = CoralLexer.analyze_file(filename)
+        tokens = LexerCoral.analisar_arquivo(nome_arquivo)
         
         # Exibe tabela de tokens
         print(f"{'TOKEN':20} | {'TIPO'}")
         print("-" * 40)
         for token, tipo in tokens:
             print(f"{token:20} | {tipo}")
-            
-        print(f"\nTotal de tokens encontrados: {len(tokens)}")
-        
+                    
     except FileNotFoundError as e:
         print(f"Erro: {e}")
         sys.exit(1)
