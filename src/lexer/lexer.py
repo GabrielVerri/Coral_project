@@ -23,12 +23,13 @@ class AnalisadorLexico:
         Args:
             codigo_fonte (str): Código fonte em Coral para tokenizar
         """
-        self.codigo_fonte = codigo_fonte
-        self.posicao = 0
-        self.linha = 1
-        self.coluna = 1
+        self.codigo_fonte = codigo_fonte  # O código que será analisado
         
-        # Palavras reservadas da linguagem Coral
+        self.posicao = 0    # Índice atual no código fonte (qual caractere estamos lendo)
+        self.linha = 1      # Linha atual (para reportar erros com precisão)
+        self.coluna = 1     # Coluna atual (para reportar erros com precisão)
+        
+        # DICIONÁRIO DE PALAVRAS RESERVADAS DA LINGUAGEM CORAL
         self.palavras_reservadas = {
             'SE', 'SENAO', 'SENAOSE', 'ENQUANTO', 'PARA', 'DENTRODE',
             'E', 'OU', 'NAO', 'VERDADE', 'FALSO',
@@ -40,9 +41,8 @@ class AnalisadorLexico:
             'ESPERA', 'VAZIO', 'EIGUAL', 'LAMBDA', 'COM', 'DELETAR',
             'ASSINCRONO', 'ENVIAR'
         }
-        
-        # Obtém lista de AFDs na ordem de prioridade
-        self.afds = get_afds()
+
+        self.afds = get_afds()  # Obtém a lista de AFDs que farão o reconhecimento de padrões
 
     def _eh_alfanumerico_ou_underscore(self, caractere):
         """Verifica se o caractere é alfanumérico ou underscore."""
@@ -60,28 +60,38 @@ class AnalisadorLexico:
         """
         tokens = []
         
+        # LOOP PRINCIPAL: Percorre todo o código fonte caractere por caractere
         while self.posicao < len(self.codigo_fonte):
-            caractere = self.codigo_fonte[self.posicao]
+            caractere = self.codigo_fonte[self.posicao]  # Caractere atual
             
-            # Ignora espaços em branco e quebras de linha
+            # Pula espaços, tabs, quebras de linha
             if caractere.isspace():
-                self._avancar(1)
-                continue
+                self._avancar(1)  # Move ponteiro e atualiza linha/coluna
+                continue          # Volta para o início do loop
             
-            # Tenta reconhecer token com cada AFD
-            resultado = None
-            for afd in self.afds:
-                resultado = afd.match(self.codigo_fonte[self.posicao:])
-                if resultado:
+            # TENTATIVA DE MATCH COM O AFD UNIFICADO
+            # Como temos apenas 1 AFD unificado, não precisamos de loop
+            afd_unificado = self.afds[0]  # Acessa diretamente o único AFD
+            
+            # TENTATIVA DE MATCH: 
+            # - Passa o resto do código (da posição atual até o fim)
+            # - Retorna None se não reconhecer, ou (lexema, tamanho, tipo) se reconhecer
+            resultado = afd_unificado.match(self.codigo_fonte[self.posicao:])
+            
+            if resultado:  # AFD reconheceu um token
                     lexema, tamanho, tipo = resultado
+                    # lexema: o texto do token
+                    # tamanho: quantos caracteres o token ocupa 
+                    # tipo: categoria do token (ex: "PALAVRA_RESERVADA", "INTEIRO")
                     
-                    # Validação especial: número seguido de letra/underscore = erro
+                    # VALIDAÇÕES ESPECIAIS PÓS-RECONHECIMENTO
+                    # Números seguidos de letras são inválidos (ex: 123abc)
                     if tipo in ("INTEIRO", "DECIMAL"):
                         proxima_posicao = self.posicao + tamanho
                         if proxima_posicao < len(self.codigo_fonte):
                             proximo_caractere = self.codigo_fonte[proxima_posicao]
                             if self._eh_alfanumerico_ou_underscore(proximo_caractere):
-                                # Encontra onde termina a sequência inválida
+                                # Encontra onde termina toda a sequência inválida
                                 fim_sequencia = proxima_posicao
                                 while (fim_sequencia < len(self.codigo_fonte) and 
                                        self._eh_alfanumerico_ou_underscore(self.codigo_fonte[fim_sequencia])):
@@ -92,35 +102,47 @@ class AnalisadorLexico:
                                     f"'{sequencia_invalida}' - números não podem ser seguidos por letras"
                                 )
                     
-                    # Classifica identificadores vs palavras reservadas
+                    # Reclassifica identificadores como palavras reservadas
                     if tipo == "IDENTIFICADOR":
                         if lexema in self.palavras_reservadas:
-                            tipo = "PALAVRA_RESERVADA"
+                            tipo = "PALAVRA_RESERVADA"  # Muda o tipo do token
                     
-                    # Comentários são processados mas não incluídos na saída
+
+                    # Comentários são reconhecidos mas não incluídos na saída final
                     if tipo not in ("COMENTARIO_LINHA", "COMENTARIO_BLOCO"):
-                        tokens.append((lexema, tipo))
+                        tokens.append((lexema, tipo))  # Adiciona token válido à lista
                     
+                    # Move o ponteiro pela quantidade de caracteres que o token ocupou
                     self._avancar(tamanho)
-                    break
-            
-            # Se nenhum AFD reconheceu o token
-            if not resultado:
+            else:
+                # FASE 6: TRATAMENTO DE ERRO - AFD NÃO RECONHECEU
+                # Se chegou aqui, o AFD não conseguiu fazer match com o caractere atual
+                # Isso significa que temos um caractere/sequência inválida na linguagem
                 raise ValueError(
                     f"Token inválido na linha {self.linha}, coluna {self.coluna}: '{caractere}'"
                 )
         
+        # RETORNO: Lista completa de todos os tokens reconhecidos
         return tokens
     
     def _avancar(self, quantidade):
-        """Avança quantidade de posições no código fonte, atualizando linha e coluna."""
+        """
+        Avança o ponteiro no código fonte e mantém controle de linha/coluna.
+        """
+        # AVANÇA CARACTERE POR CARACTERE
         for _ in range(quantidade):
+            # Verifica se ainda há caracteres para processar
             if self.posicao < len(self.codigo_fonte):
+                # CONTROLE DE LINHA E COLUNA PARA RELATÓRIO DE ERROS
                 if self.codigo_fonte[self.posicao] == "\n":
+                    # Encontrou quebra de linha: vai para próxima linha, volta coluna para 1
                     self.linha += 1
                     self.coluna = 1
                 else:
+                    # Caractere normal: apenas avança a coluna
                     self.coluna += 1
+                
+                # AVANÇA O PONTEIRO PRINCIPAL
                 self.posicao += 1
 
 class LexerCoral:
@@ -168,7 +190,16 @@ class LexerCoral:
         return analisador.tokenizar()
 
 def main():
-    """Função principal para execução via linha de comando."""
+    """
+    Função principal para execução via linha de comando.
+    
+    FLUXO COMPLETO:
+    1. Valida argumentos da linha de comando
+    2. Lê arquivo fonte
+    3. Executa análise léxica (tokenização)
+    4. Exibe resultados ou erros
+    """
+    # VALIDAÇÃO DE ARGUMENTOS
     if len(sys.argv) != 2:
         print("Uso: python lexer.py <arquivo.coral>")
         sys.exit(1)
@@ -176,14 +207,17 @@ def main():
     nome_arquivo = sys.argv[1]
     
     try:
+        # ANÁLISE LÉXICA
         tokens = LexerCoral.analisar_arquivo(nome_arquivo)
         
-        # Exibe tabela de tokens
+        # EXIBIÇÃO DOS RESULTADOS
+        # Formata e exibe todos os tokens encontrados em formato tabular
         print(f"{'TOKEN':20} | {'TIPO'}")
         print("-" * 40)
         for token, tipo in tokens:
             print(f"{token:20} | {tipo}")
-                    
+    
+    # TRATAMENTO DE ERROS
     except FileNotFoundError as e:
         print(f"Erro: {e}")
         sys.exit(1)
