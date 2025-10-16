@@ -44,9 +44,7 @@ class AnalisadorLexico:
 
         self.afds = get_afds()  # Obtém a lista de AFDs que farão o reconhecimento de padrões
 
-    def _eh_alfanumerico_ou_underscore(self, caractere):
-        """Verifica se o caractere é alfanumérico ou underscore."""
-        return caractere.isalnum() or caractere == '_'
+
     
     def tokenizar(self):
         """
@@ -84,23 +82,7 @@ class AnalisadorLexico:
                     # tamanho: quantos caracteres o token ocupa 
                     # tipo: categoria do token (ex: "PALAVRA_RESERVADA", "INTEIRO")
                     
-                    # VALIDAÇÕES ESPECIAIS PÓS-RECONHECIMENTO
-                    # Números seguidos de letras são inválidos (ex: 123abc)
-                    if tipo in ("INTEIRO", "DECIMAL"):
-                        proxima_posicao = self.posicao + tamanho
-                        if proxima_posicao < len(self.codigo_fonte):
-                            proximo_caractere = self.codigo_fonte[proxima_posicao]
-                            if self._eh_alfanumerico_ou_underscore(proximo_caractere):
-                                # Encontra onde termina toda a sequência inválida
-                                fim_sequencia = proxima_posicao
-                                while (fim_sequencia < len(self.codigo_fonte) and 
-                                       self._eh_alfanumerico_ou_underscore(self.codigo_fonte[fim_sequencia])):
-                                    fim_sequencia += 1
-                                sequencia_invalida = self.codigo_fonte[self.posicao:fim_sequencia]
-                                raise ValueError(
-                                    f"Token inválido na linha {self.linha}, coluna {self.coluna}: "
-                                    f"'{sequencia_invalida}' - números não podem ser seguidos por letras"
-                                )
+                    # Validação removida - AFD já garante tokens válidos
                     
                     # Reclassifica identificadores como palavras reservadas
                     if tipo == "IDENTIFICADOR":
