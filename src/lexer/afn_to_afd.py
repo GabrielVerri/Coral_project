@@ -28,33 +28,33 @@ class ConversorAFNparaAFD:
         return None
     
     def construir_subconjuntos(self):
+        """Algoritmo de construção de subconjuntos para converter AFN em AFD."""
         estado_inicial = 'Sq0'
         estados_nao_processados = [estado_inicial]
         
+        # Estado inicial do AFD = ε-fecho do estado inicial do AFN
         self.afd_estados[estado_inicial] = frozenset(self.afn.epsilon_fecho(self.afn.estado_inicial.id))
         
         tipo_token = self._eh_estado_aceitacao(self.afd_estados[estado_inicial])
         if tipo_token:
             self.afd_estados_aceitacao[estado_inicial] = tipo_token
+            
         while estados_nao_processados:
             estado_atual = estados_nao_processados.pop()
             estados_afn = self.afd_estados[estado_atual]
             
             # Para cada símbolo possível
             for simbolo in self.afn_transicoes.get_simbolos():
-                # Conjunto de estados alcançáveis
                 estados_destino = set()
                 
                 # Para cada estado AFN no estado atual do AFD
                 for estado in estados_afn:
-                    # Adiciona estados alcançáveis com o símbolo atual
                     novos_estados = self.afn.mover({estado}, simbolo)
                     for novo_estado in novos_estados:
                         # Adiciona o ε-fecho de cada novo estado
                         estados_destino.update(self.afn.epsilon_fecho(novo_estado))
                 
                 if estados_destino:
-                    # Cria novo nome para o estado de destino
                     estado_destino = self._novo_nome_estado(estados_destino)
                     
                     # Adiciona transição

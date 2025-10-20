@@ -5,6 +5,8 @@ from ..AFD import (
 )
 
 class Estado:
+    """Representa um estado do AFN."""
+    
     def __init__(self, id_estado, aceitacao=False, tipo_token=None):
         self.id = id_estado
         self.aceitacao = aceitacao

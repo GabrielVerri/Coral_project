@@ -1,8 +1,10 @@
 class AFNTransicoes:
+    """Gerencia transições do AFN para conversão em AFD."""
+    
     def __init__(self, estados, estado_inicial):
-        self.estados = estados  # {id_estado: Estado}
+        self.estados = estados
         self.estado_inicial = estado_inicial
-        self.tabela_transicoes = {}  # {estado: {simbolo: conjunto_estados}}
+        self.tabela_transicoes = {}
         self._construir_tabela_transicoes()
     
     def _construir_tabela_transicoes(self):
@@ -19,8 +21,7 @@ class AFNTransicoes:
                 self.tabela_transicoes[estado_id]['ε'] = estado.epsilon_transicoes
     
     def get_transicoes(self, estado_id, simbolo=None):
-        """Retorna as transições possíveis para um estado e símbolo.
-        Se símbolo é None, retorna todas as transições do estado."""
+        """Retorna as transições possíveis para um estado e símbolo."""
         if estado_id not in self.tabela_transicoes:
             return set()
             
