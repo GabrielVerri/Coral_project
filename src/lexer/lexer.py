@@ -1,8 +1,3 @@
-"""
-Lexer para a linguagem Coral - Analisador Léxico completo.
-Implementa tokenização utilizando AFDs para reconhecimento de padrões.
-"""
-
 import sys
 import os
 
@@ -12,22 +7,16 @@ sys.path.insert(0, src_dir)
 
 # Importa os AFDs necessários
 from lexer.AFD import get_afds
+from lexer.Token import Token
+from lexer.Buffer import BufferLeitura, BufferTokens
 
 class AnalisadorLexico:
     """Analisador léxico/Tokenizador para a linguagem Coral."""
     
     def __init__(self, codigo_fonte):
-        """
-        Inicializa o analisador léxico com o código fonte.
-        
-        Args:
-            codigo_fonte (str): Código fonte em Coral para tokenizar
-        """
-        self.codigo_fonte = codigo_fonte  # O código que será analisado
-        
-        self.posicao = 0    # Índice atual no código fonte (qual caractere estamos lendo)
-        self.linha = 1      # Linha atual (para reportar erros com precisão)
-        self.coluna = 1     # Coluna atual (para reportar erros com precisão)
+        # BUFFERS: Gerenciam leitura do código e armazenamento de tokens
+        self.buffer_leitura = BufferLeitura(codigo_fonte)  # Controla posição, linha, coluna
+        self.buffer_tokens = BufferTokens()                 # Armazena tokens reconhecidos
         
         # DICIONÁRIO DE PALAVRAS RESERVADAS DA LINGUAGEM CORAL
         self.palavras_reservadas = {
@@ -43,29 +32,20 @@ class AnalisadorLexico:
         }
 
         self.afds = get_afds()  # Obtém a lista de AFDs que farão o reconhecimento de padrões
-
-
     
     def tokenizar(self):
-        """
-        Realiza a tokenização do código fonte.
-        
-        Returns:
-            list: Lista de tuplas (lexema, tipo_token)
-            
-        Raises:
-            ValueError: Quando encontra token inválido
-        """
-        tokens = []
-        
         # LOOP PRINCIPAL: Percorre todo o código fonte caractere por caractere
-        while self.posicao < len(self.codigo_fonte):
-            caractere = self.codigo_fonte[self.posicao]  # Caractere atual
+        while not self.buffer_leitura.fim_arquivo():
+            caractere = self.buffer_leitura.caractere_atual()  # Caractere atual
             
             # Pula espaços, tabs, quebras de linha
             if caractere.isspace():
-                self._avancar(1)  # Move ponteiro e atualiza linha/coluna
-                continue          # Volta para o início do loop
+                self.buffer_leitura.avancar(1)  # Move ponteiro e atualiza linha/coluna
+                continue                         # Volta para o início do loop
+            
+            # CAPTURA INFORMAÇÃO DE POSIÇÃO ANTES DO MATCH
+            # Salva linha, coluna e posição onde o token começa
+            pos_info = self.buffer_leitura.get_posicao_info()
             
             # TENTATIVA DE MATCH COM O AFD UNIFICADO
             # Como temos apenas 1 AFD unificado, não precisamos de loop
@@ -74,7 +54,7 @@ class AnalisadorLexico:
             # TENTATIVA DE MATCH: 
             # - Passa o resto do código (da posição atual até o fim)
             # - Retorna None se não reconhecer, ou (lexema, tamanho, tipo) se reconhecer
-            resultado = afd_unificado.match(self.codigo_fonte[self.posicao:])
+            resultado = afd_unificado.match(self.buffer_leitura.resto_codigo())
             
             if resultado:  # AFD reconheceu um token
                     lexema, tamanho, tipo = resultado
@@ -82,69 +62,41 @@ class AnalisadorLexico:
                     # tamanho: quantos caracteres o token ocupa 
                     # tipo: categoria do token (ex: "PALAVRA_RESERVADA", "INTEIRO")
                     
-                    # Validação removida - AFD já garante tokens válidos
-                    
                     # Reclassifica identificadores como palavras reservadas
                     if tipo == "IDENTIFICADOR":
                         if lexema in self.palavras_reservadas:
                             tipo = "PALAVRA_RESERVADA"  # Muda o tipo do token
                     
-
                     # Comentários são reconhecidos mas não incluídos na saída final
                     if tipo not in ("COMENTARIO_LINHA", "COMENTARIO_BLOCO"):
-                        tokens.append((lexema, tipo))  # Adiciona token válido à lista
+                        # Cria objeto Token com informações de posição
+                        token = Token(
+                            lexema=lexema,
+                            tipo=tipo,
+                            linha=pos_info['linha'],
+                            coluna=pos_info['coluna'],
+                            posicao=pos_info['posicao']
+                        )
+                        self.buffer_tokens.adicionar(token)  # Adiciona ao buffer
                     
                     # Move o ponteiro pela quantidade de caracteres que o token ocupou
-                    self._avancar(tamanho)
+                    self.buffer_leitura.avancar(tamanho)
             else:
                 # FASE 6: TRATAMENTO DE ERRO - AFD NÃO RECONHECEU
                 # Se chegou aqui, o AFD não conseguiu fazer match com o caractere atual
                 # Isso significa que temos um caractere/sequência inválida na linguagem
                 raise ValueError(
-                    f"Token inválido na linha {self.linha}, coluna {self.coluna}: '{caractere}'"
+                    f"Token inválido na linha {pos_info['linha']}, coluna {pos_info['coluna']}: '{caractere}'"
                 )
         
-        # RETORNO: Lista completa de todos os tokens reconhecidos
-        return tokens
-    
-    def _avancar(self, quantidade):
-        """
-        Avança o ponteiro no código fonte e mantém controle de linha/coluna.
-        """
-        # AVANÇA CARACTERE POR CARACTERE
-        for _ in range(quantidade):
-            # Verifica se ainda há caracteres para processar
-            if self.posicao < len(self.codigo_fonte):
-                # CONTROLE DE LINHA E COLUNA PARA RELATÓRIO DE ERROS
-                if self.codigo_fonte[self.posicao] == "\n":
-                    # Encontrou quebra de linha: vai para próxima linha, volta coluna para 1
-                    self.linha += 1
-                    self.coluna = 1
-                else:
-                    # Caractere normal: apenas avança a coluna
-                    self.coluna += 1
-                
-                # AVANÇA O PONTEIRO PRINCIPAL
-                self.posicao += 1
+        # RETORNO: Buffer completo com todos os tokens reconhecidos
+        return self.buffer_tokens
 
 class LexerCoral:
     """Interface principal do analisador léxico da linguagem Coral."""
     
     @staticmethod
     def analisar_arquivo(nome_arquivo):
-        """
-        Analisa um arquivo Coral e retorna os tokens.
-        
-        Args:
-            nome_arquivo (str): Caminho para o arquivo .coral
-            
-        Returns:
-            list: Lista de tokens (lexema, tipo)
-            
-        Raises:
-            FileNotFoundError: Se o arquivo não existir
-            ValueError: Se houver erro léxico
-        """
         try:
             with open(nome_arquivo, "r", encoding="utf-8") as f:
                 codigo_fonte = f.read()
@@ -156,18 +108,6 @@ class LexerCoral:
     
     @staticmethod
     def analisar_string(codigo_fonte):
-        """
-        Analisa uma string de código Coral e retorna os tokens.
-        
-        Args:
-            codigo_fonte (str): Código fonte em Coral
-            
-        Returns:
-            list: Lista de tokens (lexema, tipo)
-            
-        Raises:
-            ValueError: Se houver erro léxico
-        """
         analisador = AnalisadorLexico(codigo_fonte)
         return analisador.tokenizar()
 
@@ -190,13 +130,15 @@ def main():
     
     try:
         # ANÁLISE LÉXICA
-        tokens = LexerCoral.analisar_arquivo(nome_arquivo)
+        buffer_tokens = LexerCoral.analisar_arquivo(nome_arquivo)
         
         # EXIBIÇÃO DOS RESULTADOS
         # Formata e exibe todos os tokens encontrados em formato tabular
         print(f"{'TOKEN':20} | {'TIPO'}")
         print("-" * 40)
-        for token, tipo in tokens:
+        
+        # Itera sobre o buffer obtendo tokens como tuplas (lexema, tipo)
+        for token, tipo in buffer_tokens.obter_tuplas():
             print(f"{token:20} | {tipo}")
     
     # TRATAMENTO DE ERROS
