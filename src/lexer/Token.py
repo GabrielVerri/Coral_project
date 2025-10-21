@@ -13,7 +13,3 @@ class Token:
     
     def __str__(self):
         return f"{self.lexema} ({self.tipo})"
-    
-    def to_tuple(self):
-        """Retorna tupla (lexema, tipo) para compatibilidade."""
-        return (self.lexema, self.tipo)

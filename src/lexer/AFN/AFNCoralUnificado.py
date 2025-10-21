@@ -1,9 +1,3 @@
-from ..AFD import (
-    AFDComentariosLinha, AFDStringLiteral, AFDIdentificadores, AFDDelimitadores,
-    AFDOperadoresAritmeticosRelacionais, AFDOperadoresLogicos, 
-    AFDOperadoresBooleanos, AFDDecimal
-)
-
 class Estado:
     """Representa um estado do AFN."""
     

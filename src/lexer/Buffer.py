@@ -40,35 +40,3 @@ class BufferLeitura:
                 else:
                     self.coluna += 1
                 self.posicao += 1
-
-
-class BufferTokens:
-    """Armazena tokens reconhecidos durante a análise léxica."""
-    
-    def __init__(self):
-        self.tokens = []
-    
-    def adicionar(self, token):
-        """Adiciona um token ao buffer."""
-        self.tokens.append(token)
-    
-    def obter_todos(self):
-        """Retorna lista de todos os tokens."""
-        return self.tokens
-    
-    def obter_tuplas(self):
-        """Retorna lista de tuplas (lexema, tipo) para compatibilidade."""
-        return [token.to_tuple() for token in self.tokens]
-    
-    def limpar(self):
-        """Limpa o buffer de tokens."""
-        self.tokens = []
-    
-    def __len__(self):
-        return len(self.tokens)
-    
-    def __iter__(self):
-        return iter(self.tokens)
-    
-    def __getitem__(self, index):
-        return self.tokens[index]

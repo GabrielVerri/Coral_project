@@ -8,18 +8,13 @@ from .AFDUnificado import AFDUnificado
 
 __all__ = [
     "AFDUnificado",
-    "get_afds"
+    "get_afd"
 ]
 
-def get_afds():
-    """Retorna uma lista com o AFD unificado"""
-    # Cria o AFN
+def get_afd():
+    """Retorna o AFD unificado."""
     afn = AFNCoralUnificado()
-    
-    # Cria o conversor
     conversor = ConversorAFNparaAFD(afn)
-    
-    # Cria o AFD unificado
     afd_unificado = AFDUnificado(conversor)
     
-    return [afd_unificado]
+    return afd_unificado

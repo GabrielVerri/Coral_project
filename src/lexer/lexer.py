@@ -1,24 +1,19 @@
 import sys
 import os
 
-# Adiciona o diretório src ao path do Python para imports
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, src_dir)
 
-# Importa os AFDs necessários
-from lexer.AFD import get_afds
+from lexer.AFD import get_afd
 from lexer.Token import Token
-from lexer.Buffer import BufferLeitura, BufferTokens
+from lexer.Buffer import BufferLeitura
 
 class AnalisadorLexico:
     """Analisador léxico/Tokenizador para a linguagem Coral."""
     
     def __init__(self, codigo_fonte):
-        # BUFFERS: Gerenciam leitura do código e armazenamento de tokens
-        self.buffer_leitura = BufferLeitura(codigo_fonte)  # Controla posição, linha, coluna
-        self.buffer_tokens = BufferTokens()                 # Armazena tokens reconhecidos
+        self.buffer_leitura = BufferLeitura(codigo_fonte)
         
-        # DICIONÁRIO DE PALAVRAS RESERVADAS DA LINGUAGEM CORAL
         self.palavras_reservadas = {
             'SE', 'SENAO', 'SENAOSE', 'ENQUANTO', 'PARA', 'DENTRODE',
             'E', 'OU', 'NAO', 'VERDADE', 'FALSO',
@@ -31,97 +26,87 @@ class AnalisadorLexico:
             'ASSINCRONO', 'ENVIAR'
         }
 
-        self.afds = get_afds()  # Obtém a lista de AFDs que farão o reconhecimento de padrões
+        self.afd = get_afd()
     
-    def tokenizar(self):
-        # LOOP PRINCIPAL: Percorre todo o código fonte caractere por caractere
+    def _reconhecer_proximo_token(self):
+        """Reconhece e retorna o próximo token do código fonte."""
         while not self.buffer_leitura.fim_arquivo():
-            caractere = self.buffer_leitura.caractere_atual()  # Caractere atual
+            caractere = self.buffer_leitura.caractere_atual()
             
-            # Pula espaços, tabs, quebras de linha
             if caractere.isspace():
-                self.buffer_leitura.avancar(1)  # Move ponteiro e atualiza linha/coluna
-                continue                         # Volta para o início do loop
+                self.buffer_leitura.avancar(1)
+                continue
             
-            # CAPTURA INFORMAÇÃO DE POSIÇÃO ANTES DO MATCH
-            # Salva linha, coluna e posição onde o token começa
             pos_info = self.buffer_leitura.get_posicao_info()
+            resultado = self.afd.match(self.buffer_leitura.resto_codigo())
             
-            # TENTATIVA DE MATCH COM O AFD UNIFICADO
-            # Como temos apenas 1 AFD unificado, não precisamos de loop
-            afd_unificado = self.afds[0]  # Acessa diretamente o único AFD
-            
-            # TENTATIVA DE MATCH: 
-            # - Passa o resto do código (da posição atual até o fim)
-            # - Retorna None se não reconhecer, ou (lexema, tamanho, tipo) se reconhecer
-            resultado = afd_unificado.match(self.buffer_leitura.resto_codigo())
-            
-            if resultado:  # AFD reconheceu um token
-                    lexema, tamanho, tipo = resultado
-                    # lexema: o texto do token
-                    # tamanho: quantos caracteres o token ocupa 
-                    # tipo: categoria do token (ex: "PALAVRA_RESERVADA", "INTEIRO")
-                    
-                    # Reclassifica identificadores como palavras reservadas
-                    if tipo == "IDENTIFICADOR":
-                        if lexema in self.palavras_reservadas:
-                            tipo = "PALAVRA_RESERVADA"  # Muda o tipo do token
-                    
-                    # Comentários são reconhecidos mas não incluídos na saída final
-                    if tipo not in ("COMENTARIO_LINHA", "COMENTARIO_BLOCO"):
-                        # Cria objeto Token com informações de posição
-                        token = Token(
-                            lexema=lexema,
-                            tipo=tipo,
-                            linha=pos_info['linha'],
-                            coluna=pos_info['coluna'],
-                            posicao=pos_info['posicao']
-                        )
-                        self.buffer_tokens.adicionar(token)  # Adiciona ao buffer
-                    
-                    # Move o ponteiro pela quantidade de caracteres que o token ocupou
-                    self.buffer_leitura.avancar(tamanho)
+            if resultado:
+                lexema, tamanho, tipo = resultado
+                
+                # Reclassifica palavras reservadas
+                if tipo == "IDENTIFICADOR" and lexema in self.palavras_reservadas:
+                    tipo = "PALAVRA_RESERVADA"
+                
+                token = Token(lexema, tipo, pos_info['linha'], pos_info['coluna'], pos_info['posicao'])
+                self.buffer_leitura.avancar(tamanho)
+                return token
             else:
-                # FASE 6: TRATAMENTO DE ERRO - AFD NÃO RECONHECEU
-                # Se chegou aqui, o AFD não conseguiu fazer match com o caractere atual
-                # Isso significa que temos um caractere/sequência inválida na linguagem
                 raise ValueError(
                     f"Token inválido na linha {pos_info['linha']}, coluna {pos_info['coluna']}: '{caractere}'"
                 )
         
-        # RETORNO: Buffer completo com todos os tokens reconhecidos
-        return self.buffer_tokens
+        return None
+    
+    def getNextToken(self):
+        """Retorna o próximo token para o analisador sintático."""
+        token = self._reconhecer_proximo_token()
+        
+        # Pula comentários
+        while token and token.tipo in ("COMENTARIO_LINHA", "COMENTARIO_BLOCO"):
+            token = self._reconhecer_proximo_token()
+        
+        # Retorna EOF se acabou
+        if token is None:
+            pos_info = self.buffer_leitura.get_posicao_info()
+            token = Token("", "EOF", pos_info['linha'], pos_info['coluna'], pos_info['posicao'])
+        
+        return token
+    
+    def peekNextToken(self):
+        """Espia o próximo token sem consumi-lo (lookahead)."""
+        pos_salva = self.buffer_leitura.posicao
+        linha_salva = self.buffer_leitura.linha
+        coluna_salva = self.buffer_leitura.coluna
+        
+        token = self.getNextToken()
+        
+        self.buffer_leitura.posicao = pos_salva
+        self.buffer_leitura.linha = linha_salva
+        self.buffer_leitura.coluna = coluna_salva
+        
+        return token
 
 class LexerCoral:
     """Interface principal do analisador léxico da linguagem Coral."""
     
     @staticmethod
     def analisar_arquivo(nome_arquivo):
+        """Analisa um arquivo Coral retornando o analisador léxico."""
         try:
             with open(nome_arquivo, "r", encoding="utf-8") as f:
                 codigo_fonte = f.read()
         except FileNotFoundError:
             raise FileNotFoundError(f"Arquivo {nome_arquivo} não encontrado.")
         
-        analisador = AnalisadorLexico(codigo_fonte)
-        return analisador.tokenizar()
+        return AnalisadorLexico(codigo_fonte)
     
     @staticmethod
     def analisar_string(codigo_fonte):
-        analisador = AnalisadorLexico(codigo_fonte)
-        return analisador.tokenizar()
+        """Analisa uma string de código Coral retornando o analisador léxico."""
+        return AnalisadorLexico(codigo_fonte)
 
 def main():
-    """
-    Função principal para execução via linha de comando.
-    
-    FLUXO COMPLETO:
-    1. Valida argumentos da linha de comando
-    2. Lê arquivo fonte
-    3. Executa análise léxica (tokenização)
-    4. Exibe resultados ou erros
-    """
-    # VALIDAÇÃO DE ARGUMENTOS
+    """Função principal para execução via linha de comando."""
     if len(sys.argv) != 2:
         print("Uso: python lexer.py <arquivo.coral>")
         sys.exit(1)
@@ -129,19 +114,17 @@ def main():
     nome_arquivo = sys.argv[1]
     
     try:
-        # ANÁLISE LÉXICA
-        buffer_tokens = LexerCoral.analisar_arquivo(nome_arquivo)
+        lexer = LexerCoral.analisar_arquivo(nome_arquivo)
         
-        # EXIBIÇÃO DOS RESULTADOS
-        # Formata e exibe todos os tokens encontrados em formato tabular
         print(f"{'TOKEN':20} | {'TIPO'}")
         print("-" * 40)
         
-        # Itera sobre o buffer obtendo tokens como tuplas (lexema, tipo)
-        for token, tipo in buffer_tokens.obter_tuplas():
-            print(f"{token:20} | {tipo}")
+        while True:
+            token = lexer.getNextToken()
+            if token.tipo == "EOF":
+                break
+            print(f"{token.lexema:20} | {token.tipo}")
     
-    # TRATAMENTO DE ERROS
     except FileNotFoundError as e:
         print(f"Erro: {e}")
         sys.exit(1)
