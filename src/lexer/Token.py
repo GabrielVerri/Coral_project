@@ -10,6 +10,3 @@ class Token:
     
     def __repr__(self):
         return f"Token({self.lexema!r}, {self.tipo}, L{self.linha}:C{self.coluna})"
-    
-    def __str__(self):
-        return f"{self.lexema} ({self.tipo})"

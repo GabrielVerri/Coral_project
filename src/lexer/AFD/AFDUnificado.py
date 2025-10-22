@@ -19,7 +19,7 @@ class AFDUnificado:
             return 'digito'
         elif char == '.':
             return '.'
-        elif char in ('+', '-', '*', '/', '%', '=', '!', '<', '>', '(', ')', '{', '}', ','):
+        elif char in ('+', '-', '*', '/', '%', '=', '!', '<', '>', '(', ')', '{', '}', '[', ']', ',', ':', ';'):
             return char
         elif char == '#':
             return '#'
