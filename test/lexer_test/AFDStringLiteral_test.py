@@ -54,12 +54,25 @@ class TestAFDStringLiteral(unittest.TestCase):
         self.assertEqual(resultado[2], "STRING", "Tipo do token deveria ser STRING")
     
     def test_rejeita_string_nao_fechada(self):
-        """Testa rejeição de strings não fechadas."""
-        entradas = ['"teste', "'teste", '"teste"texto', "'teste'texto"]
+        """Testa rejeição de strings não fechadas (sem aspas de fechamento)."""
+        # Strings que realmente não têm fechamento
+        entradas = ['"teste', "'teste"]
         for entrada in entradas:
             with self.subTest(entrada=entrada):
                 resultado = self.afd.match(entrada)
                 self.assertIsNone(resultado, f"Não deveria reconhecer string não fechada {entrada}")
+    
+    def test_string_com_texto_depois(self):
+        """Testa que string válida seguida de texto reconhece apenas a string."""
+        # O AFD deve reconhecer a string válida e parar
+        casos = [
+            ('"teste"texto', ('"teste"', 7, 'STRING')),
+            ("'teste'texto", ("'teste'", 7, 'STRING'))
+        ]
+        for entrada, esperado in casos:
+            with self.subTest(entrada=entrada):
+                resultado = self.afd.match(entrada)
+                self.assertEqual(resultado, esperado)
     
     def test_rejeita_string_sem_aspas(self):
         """Testa rejeição de texto sem aspas."""
