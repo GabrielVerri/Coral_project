@@ -1,49 +1,41 @@
 """
-Runner de testes para o analisador léxico.
-Executa todos os testes unitários dos AFDs.
+Runner de testes para o projeto Coral.
+Wrapper simplificado para executar pytest com as configurações adequadas.
+
+Uso:
+    python test/run_tests.py           # Roda todos os testes
+    python test/run_tests.py -v        # Modo verboso
+    python test/run_tests.py --help    # Ajuda do pytest
 """
-import unittest
+import subprocess
 import sys
 import os
 
-# Adiciona o diretório raiz ao path para permitir imports relativos
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Importa todos os testes
-from test.lexer_test.AFDComentariosLinha_test import TestAFDComentariosLinha
-from test.lexer_test.AFDDecimal_test import TestAFDDecimal
-from test.lexer_test.AFDIdentificadores_test import TestAFDIdentificadores
-from test.lexer_test.AFDOperadoresAritmeticosRelacionais_test import TestAFDOperadoresAritmeticosRelacionais
-from test.lexer_test.AFDOperadoresBooleanos_test import TestAFDOperadoresBooleanos
-from test.lexer_test.AFDOperadoresLogicos_test import TestAFDOperadoresLogicos
-from test.lexer_test.AFDStringLiteral_test import TestAFDStringLiteral
-
 def run_tests():
-    """Executa todos os testes unitários."""
-    # Cria um test suite com todos os testes
-    test_suite = unittest.TestSuite()
+    # Muda para o diretório raiz do projeto
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.chdir(project_root)
     
-    # Adiciona todas as classes de teste
-    test_classes = [
-        TestAFDComentariosLinha,
-        TestAFDDecimal,
-        TestAFDIdentificadores,
-        TestAFDOperadoresAritmeticosRelacionais,
-        TestAFDOperadoresBooleanos,
-        TestAFDOperadoresLogicos,
-        TestAFDStringLiteral
+    # Configuração padrão do pytest
+    pytest_args = [
+        sys.executable, "-m", "pytest",
+        "test/lexer_test/",
+        "-v",                # Modo verboso (mostra cada teste)
+        "--tb=short",        # Traceback curto em caso de erro
     ]
     
-    for test_class in test_classes:
-        tests = unittest.TestLoader().loadTestsFromTestCase(test_class)
-        test_suite.addTests(tests)
+    # Adiciona argumentos extras do usuário (se houver)
+    if len(sys.argv) > 1:
+        pytest_args.extend(sys.argv[1:])
     
-    # Executa os testes
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(test_suite)
+    print(f"Executando testes do Coral Lexer...")
+    print(f"Diretório: {project_root}")
+    print(f"Comando: {' '.join(pytest_args[2:])}\n")
     
-    # Retorna código de saída apropriado
-    return 0 if result.wasSuccessful() else 1
+    # Executa pytest
+    result = subprocess.run(pytest_args)
+    
+    return result.returncode
 
 if __name__ == '__main__':
     sys.exit(run_tests())
