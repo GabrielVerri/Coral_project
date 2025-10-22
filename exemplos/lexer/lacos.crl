@@ -3,15 +3,13 @@ i = 0
 soma = 0
 
 # Laço ENQUANTO - soma números de 0 a 9
-ENQUANTO i < 10 {
+ENQUANTO i < 10:
     soma = soma + i
     i = i + 1
-}
 
 # Laço PARA com range
 n = 5
-PARA num DENTRODE n {
+PARA num DENTRODE n:
     ESCREVA(num)
-}
 
 ESCREVA("Soma:", soma)

@@ -19,8 +19,9 @@ ENQUANTO contador \< 5:
     escreva("Número: " \+ contador)  
     contador \= contador \+ 1
 
-## **Exemplo de um prgrama completo**
+## **Exemplo de um programa completo**
 
+# Coral é orientada por identação - blocos usam : e identação, não {}
 continuar = VERDADEIRO
 
 ENQUANTO continuar:
@@ -41,3 +42,23 @@ ENQUANTO continuar:
         continuar = VERDADEIRO
     SENAO:
         continuar = FALSO
+
+## **Uso de delimitadores**
+
+# Dicionários usam chaves {}
+config = {
+    "timeout": 30,
+    "retries": 3,
+    "debug": VERDADEIRO
+}
+
+# Listas usam colchetes []
+numeros = [1, 2, 3, 4, 5]
+
+# Tuplas usam parênteses ()
+coordenadas = (10, 20, 30)
+
+# Funções usam parênteses () para argumentos
+FUNCAO processar(dados, opcoes):
+    PARA item DENTRODE dados:
+        ESCREVA(item)

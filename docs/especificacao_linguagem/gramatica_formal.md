@@ -9,6 +9,8 @@ numeros \= {0,...,9}
 operador \= {+, −, \*, /, \=, \>, \<,\!}  
 especial \= {espaco,newline,tab,underscore,{,},\[,\],%,&,(,),|,;,.,,}
 
+**Nota:** Coral é uma linguagem orientada por identação (como Python). Blocos de código são delimitados por identação e dois pontos `:`, não por chaves. As chaves `{}` são usadas exclusivamente para **dicionários** e os parênteses `()` para **chamadas de função** e **tuplas**.
+
 ## **Tokens**
 
 Identificadores \= \[a-zA-Z\_\]\[a-zA-Z0-9\_\]\*  

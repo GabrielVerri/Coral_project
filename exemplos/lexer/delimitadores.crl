@@ -1,0 +1,44 @@
+# Exemplo de uso correto dos delimitadores em Coral
+
+# 1. DICIONÁRIOS usam chaves {}
+pessoa = {
+    "nome": "Maria",
+    "idade": 30,
+    "cidade": "São Paulo"
+}
+
+# 2. LISTAS usam colchetes []
+numeros = [1, 2, 3, 4, 5]
+frutas = ["maçã", "banana", "laranja"]
+
+# 3. TUPLAS usam parênteses ()
+coordenadas = (10, 20, 30)
+dimensoes = (800, 600)
+
+# 4. FUNÇÕES usam parênteses () para argumentos
+FUNCAO calcular_area(largura, altura):
+    RETORNAR largura * altura
+
+# 5. BLOCOS usam : e identação (NÃO usam chaves!)
+SE pessoa["idade"] >= 18:
+    ESCREVA("Adulto")
+    status = "maior de idade"
+SENAO:
+    ESCREVA("Menor")
+    status = "menor de idade"
+
+# 6. Iterando sobre listas
+PARA num DENTRODE numeros:
+    ESCREVA(num * 2)
+
+# 7. Chamadas de função com parênteses
+area = calcular_area(10, 20)
+ESCREVA("Área:", area)
+
+# 8. Dicionário com diferentes tipos
+config = {
+    "debug": VERDADEIRO,
+    "timeout": 30,
+    "servidores": ["srv1", "srv2", "srv3"],
+    "coordenadas": (100, 200)
+}
