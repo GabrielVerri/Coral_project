@@ -1,0 +1,21 @@
+# Exemplo 7: Classes
+# Demonstra definição de classes com métodos
+
+CLASSE Pessoa:
+    FUNCAO __init__(nome, idade):
+        nome_pessoa = nome
+        idade_pessoa = idade
+    
+    FUNCAO saudar():
+        RETORNAR "Ola, eu sou " + nome_pessoa
+    
+    FUNCAO aniversario():
+        idade_pessoa = idade_pessoa + 1
+        RETORNAR idade_pessoa
+
+CLASSE Calculadora:
+    FUNCAO somar(a, b):
+        RETORNAR a + b
+    
+    FUNCAO subtrair(a, b):
+        RETORNAR a - b

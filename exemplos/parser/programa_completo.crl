@@ -1,0 +1,26 @@
+# Exemplo 8: Programa Completo
+# Demonstra um programa com múltiplas estruturas
+
+FUNCAO eh_primo(n):
+    SE n < 2:
+        RETORNAR FALSO
+    
+    divisor = 2
+    ENQUANTO divisor * divisor <= n:
+        SE n % divisor == 0:
+            RETORNAR FALSO
+        divisor = divisor + 1
+    
+    RETORNAR VERDADE
+
+FUNCAO listar_primos(limite):
+    PARA numero DENTRODE [2, 3, 4, 5, 6, 7, 8, 9, 10]:
+        SE numero > limite:
+            QUEBRA
+        
+        SE eh_primo(numero):
+            CONTINUA
+        SENAO:
+            PASSAR
+
+primos = listar_primos(10)

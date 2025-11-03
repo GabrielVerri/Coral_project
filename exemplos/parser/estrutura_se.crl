@@ -1,0 +1,19 @@
+# Exemplo 3: Estrutura Condicional SE/SENAOSE/SENAO
+# Demonstra controle de fluxo com condicionais
+
+idade = 18
+nome = "Maria"
+
+SE idade < 13:
+    categoria = "crianca"
+SENAOSE idade < 18:
+    categoria = "adolescente"
+SENAOSE idade < 60:
+    categoria = "adulto"
+SENAO:
+    categoria = "idoso"
+
+SE nome == "Maria" E idade >= 18:
+    pode_votar = VERDADE
+SENAO:
+    pode_votar = FALSO

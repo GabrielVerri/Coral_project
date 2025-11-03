@@ -1,0 +1,15 @@
+# Exemplo 2: Expressões Lógicas e Relacionais
+# Demonstra operadores de comparação e lógicos
+
+a = 10
+b = 20
+c = 15
+
+maior = a > b
+menor_ou_igual = c <= b
+igual = a == 10
+diferente = b != a
+
+condicao1 = a > 5 E b < 30
+condicao2 = maior OU menor_ou_igual
+condicao3 = NAO diferente

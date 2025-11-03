@@ -1,0 +1,19 @@
+# Exemplo 5: Funções
+# Demonstra definição e chamada de funções com parâmetros
+
+FUNCAO somar(a, b):
+    RETORNAR a + b
+
+FUNCAO fatorial(n):
+    SE n <= 1:
+        RETORNAR 1
+    SENAO:
+        RETORNAR n * fatorial(n - 1)
+
+FUNCAO saudar(nome, idade):
+    mensagem = "Ola, " + nome
+    RETORNAR mensagem
+
+resultado1 = somar(10, 20)
+resultado2 = fatorial(5)
+resultado3 = saudar("Carlos", 25)
