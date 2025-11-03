@@ -1,0 +1,14 @@
+# Exemplo 6: Funções com Parâmetros Padrão
+# Demonstra parâmetros opcionais com valores padrão
+
+FUNCAO calcular_area(largura, altura):
+    RETORNAR largura * altura
+
+FUNCAO potencia(base, expoente):
+    SE expoente == 0:
+        RETORNAR 1
+    SENAO:
+        RETORNAR base * potencia(base, expoente - 1)
+
+area1 = calcular_area(10, 5)
+quadrado = potencia(2, 3)

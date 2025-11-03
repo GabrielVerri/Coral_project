@@ -84,6 +84,177 @@ Classe ⇒ CLASSE Identificador Bloco
 
 Bloco ⇒ ':' INDENTA Declaracao* DEDENTA
 
+## **3.2 Eliminação de Recursão à Esquerda**
+
+**Análise:** A gramática Coral **NÃO** possui recursão à esquerda direta.
+
+Exemplo problemático que evitamos:
+```
+Expressao ⇒ Expressao '+' Termo  ← RECURSÃO À ESQUERDA (problemático)
+          | Termo
+```
+
+Nossa gramática usa **padrão sem recursão à esquerda**:
+```
+Expressao ⇒ Termo (OperadorAritmetico Termo)*  ← OK para LL(1)
+```
+
+**Transformação aplicada:**
+- Regra: `A ⇒ A α | β` → `A ⇒ β A'` e `A' ⇒ α A' | ε`
+- Forma compacta: `A ⇒ β (α)*` ← **Já implementado**
+
+## **3.3 Fatoração à Esquerda**
+
+**Problema:** Produções com prefixo comum causam ambiguidade.
+
+**Antes (ambíguo):**
+```
+EstruturaControle ⇒ SE Expressao Bloco          ← Prefixo: "SE Expressao Bloco"
+                  | SE Expressao Bloco SENAO Bloco  ← Mesmo prefixo
+```
+
+**Depois (fatorado):**
+```
+EstruturaControle ⇒ SE Expressao Bloco SenaoOpcional
+                  | ENQUANTO Expressao Bloco   
+                  | PARA Identificador DENTRODE Expressao Bloco
+
+SenaoOpcional ⇒ SENAO Bloco
+              | SENAOSE Expressao Bloco SenaoOpcional
+              | ε
+```
+
+**Gramática Completa Fatorada:**
+```
+Expressao ⇒ Termo ExprResto
+ExprResto ⇒ OperadorAritmetico Termo ExprResto | ε
+
+Termo ⇒ Fator TermoResto  
+TermoResto ⇒ OperadorRelacional Fator TermoResto | ε
+
+ListaParametros ⇒ Identificador ListaParamResto | ε
+ListaParamResto ⇒ ',' Identificador ListaParamResto | ε
+```
+
+## **3.4 Conjuntos FIRST**
+
+**FIRST(A)** = primeiros terminais que podem iniciar derivações de A
+
+**Algoritmo de cálculo:**
+1. Se X é terminal: FIRST(X) = {X}
+2. Se X → ε: adiciona ε a FIRST(X)
+3. Se X → Y₁Y₂...Yₖ:
+   - Adiciona FIRST(Y₁) - {ε} a FIRST(X)
+   - Se ε ∈ FIRST(Y₁), adiciona FIRST(Y₂) - {ε}
+   - Continua até encontrar Yᵢ sem ε ou acabar
+
+**Conjuntos calculados:**
+```
+FIRST(Programa) = {DEF, CLASSE, SE, ENQUANTO, PARA, ID, NUM, BOOL, STRING, '(', ε}
+FIRST(Declaracao) = {DEF, CLASSE, SE, ENQUANTO, PARA, ID, NUM, BOOL, STRING, '('}
+FIRST(Expressao) = {ID, NUM, BOOL, STRING, '('}
+FIRST(Termo) = {ID, NUM, BOOL, STRING, '('}
+FIRST(Fator) = {ID, NUM, BOOL, STRING, '('}
+FIRST(EstruturaControle) = {SE, ENQUANTO, PARA}
+FIRST(SenaoOpcional) = {SENAO, SENAOSE, ε}
+FIRST(Funcao) = {DEF}
+FIRST(Classe) = {CLASSE}
+FIRST(Bloco) = {':'}
+FIRST(ListaParametros) = {ID, ε}
+FIRST(ExprResto) = {+, -, *, /, %, **, ε}
+FIRST(TermoResto) = {==, !=, <, <=, >, >=, ε}
+```
+
+**Exemplo de cálculo - FIRST(Declaracao):**
+```
+Declaracao ⇒ Expressao | EstruturaControle | Funcao | Classe
+
+FIRST(Declaracao) = FIRST(Expressao) ∪ FIRST(EstruturaControle) ∪ FIRST(Funcao) ∪ FIRST(Classe)
+                  = {ID, NUM, BOOL, STRING, '('} ∪ {SE, ENQUANTO, PARA} ∪ {DEF} ∪ {CLASSE}
+                  = {ID, NUM, BOOL, STRING, '(', SE, ENQUANTO, PARA, DEF, CLASSE}
+```
+
+## **3.5 Conjuntos FOLLOW**
+
+**FOLLOW(A)** = terminais que podem aparecer imediatamente após A
+
+**Algoritmo de cálculo:**
+1. FOLLOW(S) = {$} (S é símbolo inicial)
+2. Se A → αBβ: adiciona FIRST(β) - {ε} a FOLLOW(B)
+3. Se A → αB ou A → αBβ onde ε ∈ FIRST(β): adiciona FOLLOW(A) a FOLLOW(B)
+
+**Conjuntos calculados:**
+```
+FOLLOW(Programa) = {$}
+FOLLOW(Declaracao) = {DEF, CLASSE, SE, ENQUANTO, PARA, ID, DEDENTA, $}
+FOLLOW(Expressao) = {')', ':', ',', NEWLINE, +, -, *, /, ==, !=, <, <=, >, >=}
+FOLLOW(Termo) = {+, -, *, /, %, **, ')', ':', ',', NEWLINE}
+FOLLOW(Fator) = {+, -, *, ==, !=, <, <=, >, >=, ')', ':', ',', NEWLINE}
+FOLLOW(EstruturaControle) = FOLLOW(Declaracao)
+FOLLOW(SenaoOpcional) = FOLLOW(EstruturaControle)
+FOLLOW(Funcao) = FOLLOW(Declaracao)
+FOLLOW(Classe) = FOLLOW(Declaracao)
+FOLLOW(Bloco) = {SENAO, SENAOSE, DEF, CLASSE, SE, DEDENTA, $}
+FOLLOW(ListaParametros) = {')'}
+FOLLOW(ExprResto) = FOLLOW(Expressao)
+FOLLOW(TermoResto) = FOLLOW(Termo)
+```
+
+**Exemplo de cálculo - FOLLOW(Expressao):**
+```
+Expressao aparece em:
+  - EstruturaControle ⇒ SE Expressao Bloco
+    → FOLLOW(Expressao) ⊇ FIRST(Bloco) = {':'}
+  
+  - Fator ⇒ '(' Expressao ')'
+    → FOLLOW(Expressao) ⊇ {')'}
+  
+  - ListaParametros → ... ',' Expressao
+    → FOLLOW(Expressao) ⊇ {',', ')'}
+
+FOLLOW(Expressao) = {')', ':', ',', NEWLINE, ...}
+```
+
+## **3.6 Verificação LL(1)**
+
+**Condições para gramática LL(1):**
+
+1. ✓ **Sem recursão à esquerda**
+2. ✓ **Fatorada à esquerda**
+3. ✓ **FIRST(α) ∩ FIRST(β) = ∅** para A → α | β
+4. ✓ **Se ε ∈ FIRST(A), então FIRST(A) ∩ FOLLOW(A) = ∅**
+
+**Resultado:** Gramática Coral é **LL(1)** (analisável por parser descendente preditivo).
+
+## **3.7 Exemplo Prático de Análise LL(1)**
+
+**Entrada:** `SE x > 0:`
+
+**Análise usando FIRST/FOLLOW:**
+
+```
+Passo 1: Programa
+  - Lookahead = SE
+  - SE ∈ FIRST(Declaracao)? Sim
+  - Aplica: Programa ⇒ Declaracao
+
+Passo 2: Declaracao
+  - Lookahead = SE
+  - SE ∈ FIRST(EstruturaControle)? Sim
+  - Aplica: Declaracao ⇒ EstruturaControle
+
+Passo 3: EstruturaControle
+  - Lookahead = SE
+  - SE ∈ FIRST(SE Expressao Bloco SenaoOpcional)? Sim
+  - Aplica: EstruturaControle ⇒ SE Expressao Bloco SenaoOpcional
+
+Passo 4: Consome SE, Lookahead = x
+  - x ∈ FIRST(Expressao)? Sim (ID ∈ FIRST(Expressao))
+  - Aplica: Expressao ⇒ Termo ExprResto
+
+... (continua parsing)
+```
+
 ---
 
 # **4. Símbolo Inicial (S)**

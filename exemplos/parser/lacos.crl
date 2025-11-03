@@ -1,0 +1,15 @@
+# Exemplo 4: Laços ENQUANTO e PARA
+# Demonstra estruturas de repetição
+
+contador = 0
+ENQUANTO contador < 5:
+    contador = contador + 1
+
+soma = 0
+PARA i DENTRODE [1, 2, 3, 4, 5]:
+    soma = soma + i
+
+PARA numero DENTRODE [10, 20, 30]:
+    SE numero > 15:
+        CONTINUA
+    resultado = numero * 2
