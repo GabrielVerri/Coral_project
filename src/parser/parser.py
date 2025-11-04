@@ -92,7 +92,7 @@ class ParserCoral:
             return False
         
         if tipo_esperado in ['(', ')', '[', ']', '{', '}', ':', ',', 
-                             '+', '-', '*', '/', '%',
+                             '+', '-', '*', '/', '%', '**',
                              '==', '!=', '<', '>', '<=', '>=',
                              '=', '+=', '-=', '*=', '/=', '%=']:
             return self.token_atual.lexema == tipo_esperado
@@ -286,13 +286,13 @@ class ParserCoral:
     
     def termo(self):
         """
-        Processa um termo (fator seguido de operadores relacionais).
+        Processa um termo (soma seguido de operadores relacionais).
         
         Returns:
             ExpressaoNode: Nó de termo.
         """
-        fator = self.fator()
-        return self.termo_resto(fator)
+        soma = self.soma()
+        return self.termo_resto(soma)
     
     def termo_resto(self, esquerda):
         """
@@ -307,7 +307,7 @@ class ParserCoral:
         if self.token_atual and self.token_atual.lexema in ['==', '!=', '<', '>', '<=', '>=']:
             operador = self.token_atual
             self.avancar()
-            direita = self.fator()
+            direita = self.soma()
             binaria = ExpressaoBinariaNode(
                 esquerda,
                 operador,
@@ -319,19 +319,19 @@ class ParserCoral:
         
         return esquerda
     
-    def fator(self):
+    def soma(self):
         """
-        Processa um fator (primário seguido de operadores aritméticos).
+        Processa uma soma (fator seguido de operadores de adição e subtração).
         
         Returns:
-            ExpressaoNode: Nó de fator.
+            ExpressaoNode: Nó de soma.
         """
-        primario = self.fator_primario()
-        return self.fator_resto(primario)
+        fator = self.fator()
+        return self.soma_resto(fator)
     
-    def fator_resto(self, esquerda):
+    def soma_resto(self, esquerda):
         """
-        Processa o resto de um fator (operadores aritméticos).
+        Processa o resto de uma soma (operadores de adição e subtração).
         
         Args:
             esquerda: Nó da expressão à esquerda.
@@ -339,10 +339,45 @@ class ParserCoral:
         Returns:
             ExpressaoNode: Nó completo ou o nó esquerda se não houver continuação.
         """
-        if self.token_atual and self.token_atual.lexema in ['+', '-', '*', '/', '%']:
+        if self.token_atual and self.token_atual.lexema in ['+', '-']:
             operador = self.token_atual
             self.avancar()
-            direita = self.fator_primario()
+            direita = self.fator()
+            binaria = ExpressaoBinariaNode(
+                esquerda,
+                operador,
+                direita,
+                operador.linha,
+                operador.coluna
+            )
+            return self.soma_resto(binaria)
+        
+        return esquerda
+    
+    def fator(self):
+        """
+        Processa um fator (exponenciação seguido de operadores de multiplicação).
+        
+        Returns:
+            ExpressaoNode: Nó de fator.
+        """
+        exponencial = self.exponenciacao()
+        return self.fator_resto(exponencial)
+    
+    def fator_resto(self, esquerda):
+        """
+        Processa o resto de um fator (operadores de multiplicação, divisão e módulo).
+        
+        Args:
+            esquerda: Nó da expressão à esquerda.
+            
+        Returns:
+            ExpressaoNode: Nó completo ou o nó esquerda se não houver continuação.
+        """
+        if self.token_atual and self.token_atual.lexema in ['*', '/', '%']:
+            operador = self.token_atual
+            self.avancar()
+            direita = self.exponenciacao()
             binaria = ExpressaoBinariaNode(
                 esquerda,
                 operador,
@@ -353,6 +388,29 @@ class ParserCoral:
             return self.fator_resto(binaria)
         
         return esquerda
+    
+    def exponenciacao(self):
+        """
+        Processa exponenciação com associatividade à direita.
+        
+        Returns:
+            ExpressaoNode: Nó de exponenciação.
+        """
+        base = self.fator_primario()
+        
+        if self.token_atual and self.token_atual.lexema == '**':
+            operador = self.token_atual
+            self.avancar()
+            expoente = self.exponenciacao()
+            return ExpressaoBinariaNode(
+                base,
+                operador,
+                expoente,
+                operador.linha,
+                operador.coluna
+            )
+        
+        return base
     
     def fator_primario(self):
         """
@@ -420,13 +478,13 @@ class ParserCoral:
         if self.verificar('-'):
             operador = self.token_atual
             self.avancar()
-            expressao = self.fator_primario()
+            expressao = self.exponenciacao()
             return ExpressaoUnariaNode(operador, expressao, operador.linha, operador.coluna)
         
         if self.verificar('NAO'):
             operador = self.token_atual
             self.avancar()
-            expressao = self.fator_primario()
+            expressao = self.exponenciacao()
             return ExpressaoUnariaNode(operador, expressao, operador.linha, operador.coluna)
         
         raise ErroSintatico(
@@ -697,9 +755,6 @@ def exibir_ast(no, indentacao=0, profundidade_maxima=10):
             exibir_ast(no.bloco_senao, indentacao + 2, profundidade_maxima)
     
     elif hasattr(no, 'bloco') and no.bloco:
-        if hasattr(no, 'parametros') and hasattr(no, 'nome'):  # Função
-            print(f"{prefixo}  Parâmetros: {len(no.parametros)}")
-            print(f"{prefixo}  Corpo:")
         exibir_ast(no.bloco, indentacao + 1, profundidade_maxima)
 
 
@@ -740,7 +795,6 @@ def main():
         print("-" * 70)
         
         # Análise léxica
-        print(f"\n[1/2] Análise Léxica...")
         lexer = LexerCoral.analisar_arquivo(arquivo)
         tokens = []
         while True:
@@ -749,14 +803,9 @@ def main():
             if token.tipo == "EOF":
                 break
         
-        print(f"✓ {len(tokens)} tokens gerados")
-        
         # Análise sintática
-        print(f"\n[2/2] Análise Sintática...")
         parser = ParserCoral(tokens)
         ast = parser.parse()
-        
-        print(f"✓ AST construída com sucesso!")
         
         # Exibe a AST
         print(f"\n{'='*70}")
@@ -764,23 +813,23 @@ def main():
         print(f"{'='*70}\n")
         exibir_ast(ast)
         print(f"\n{'='*70}")
-        print(f"✅ Análise concluída com sucesso!")
+        print(f"Análise concluída com sucesso!")
         print(f"{'='*70}\n")
         
     except ErroSintatico as e:
         print(f"\n{'='*70}")
-        print(f"❌ Erro Sintático")
+        print(f"Erro Sintático")
         print(f"{'='*70}")
         print(f"{e.formatar_mensagem()}\n")
         sys.exit(1)
         
     except FileNotFoundError as e:
-        print(f"\n❌ Erro: {e}")
+        print(f"\nErro: {e}")
         sys.exit(1)
         
     except Exception as e:
         print(f"\n{'='*70}")
-        print(f"❌ Erro Inesperado")
+        print(f"Erro Inesperado")
         print(f"{'='*70}")
         print(f"{type(e).__name__}: {e}\n")
         import traceback
