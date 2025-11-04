@@ -18,6 +18,8 @@ class AFDOperadoresAritmeticosRelacionais:
             ("%=", "OPERADOR_ATRIBUICAO"),
             ("++", "OPERADOR_ATRIBUICAO"),
             ("--", "OPERADOR_ATRIBUICAO"),
+            # Operador de Exponenciação
+            ("**", "OPERADOR_ARITMETICO"),
             # Operadores Aritméticos
             ("*", "OPERADOR_ARITMETICO"),
             ("/", "OPERADOR_ARITMETICO"),
@@ -31,11 +33,5 @@ class AFDOperadoresAritmeticosRelacionais:
         # Tenta encontrar o maior operador válido no início da entrada
         for op, tipo in operadores:
             if entrada.startswith(op):
-                # Se a entrada é exatamente o operador, aceita
-                if len(entrada) == len(op):
-                    return (op, len(op), tipo)
-                # Se tem mais caracteres depois, verifica se não formam outro operador
-                prox = entrada[len(op)]
-                if prox not in "=<>!+-*/%":
-                    return (op, len(op), tipo)
+                return (op, len(op), tipo)
         return None

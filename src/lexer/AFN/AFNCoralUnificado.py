@@ -141,6 +141,7 @@ class AFNCoralUnificado:
         qOA18 = self.criar_estado('qOA18', aceitacao=True, tipo_token='OPERADOR_ATRIBUICAO')
         qOA19 = self.criar_estado('qOA19', aceitacao=True, tipo_token='OPERADOR_ARITMETICO')
         qOA20 = self.criar_estado('qOA20', aceitacao=True, tipo_token='OPERADOR_ATRIBUICAO')
+        qOA21 = self.criar_estado('qOA21', aceitacao=True, tipo_token='OPERADOR_ARITMETICO')  # ** exponenciação
         
         self.estado_inicial.adicionar_epsilon_transicao('qOA0')
         qOA0.adicionar_transicao('=', 'qOA1')
@@ -158,6 +159,7 @@ class AFNCoralUnificado:
         qOA12.adicionar_transicao('-', 'qOA13')
         qOA12.adicionar_transicao('=', 'qOA14')
         qOA0.adicionar_transicao('*', 'qOA15')
+        qOA15.adicionar_transicao('*', 'qOA21')  # ** exponenciação
         qOA15.adicionar_transicao('=', 'qOA16')
         qOA0.adicionar_transicao('/', 'qOA17')
         qOA17.adicionar_transicao('=', 'qOA18')

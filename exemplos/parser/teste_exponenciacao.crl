@@ -1,0 +1,17 @@
+# Teste de Exponenciação
+# Demonstra associatividade à direita do operador **
+
+# Associatividade à direita: 2 ** 3 ** 2 = 2 ** (3 ** 2) = 2 ** 9 = 512
+resultado1 = 2 ** 3 ** 2
+
+# Com parênteses explícitos
+resultado2 = (2 ** 3) ** 2
+
+# Precedência: exponenciação tem maior precedência que multiplicação
+resultado3 = 2 * 3 ** 2
+
+# Precedência: exponenciação tem maior precedência que adição
+resultado4 = 2 + 3 ** 2
+
+# Combinação com outras operações
+resultado5 = 10 ** 2 + 5 * 2 ** 3

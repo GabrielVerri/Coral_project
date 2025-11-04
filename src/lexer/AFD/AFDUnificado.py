@@ -116,6 +116,8 @@ class AFDUnificado:
                 return (dois_chars, 2, "OPERADOR_RELACIONAL")
             elif dois_chars in ["++", "--", "+=", "-=", "*=", "/="]:
                 return (dois_chars, 2, "OPERADOR_ATRIBUICAO")
+            elif dois_chars == "**":
+                return ("**", 2, "OPERADOR_ARITMETICO")
         
         # Operadores e delimitadores simples
         primeiro_char = entrada[0]
