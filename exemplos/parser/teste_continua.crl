@@ -1,0 +1,5 @@
+# Teste de CONTINUA
+PARA i DENTRODE [1, 2, 3, 4, 5]:
+	SE i == 3:
+		CONTINUA
+	resultado = i * 2

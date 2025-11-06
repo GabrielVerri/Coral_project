@@ -1,0 +1,12 @@
+# Teste de funções sem parâmetros
+
+FUNCAO sem_parametros():
+	RETORNAR 42
+
+FUNCAO outra_sem_parametros():
+	x = 10
+	y = 20
+	RETORNAR x + y
+
+resultado1 = sem_parametros()
+resultado2 = outra_sem_parametros()

@@ -1,0 +1,19 @@
+# Teste de VAZIO
+valor_nulo = VAZIO
+x = VAZIO
+
+FUNCAO retorna_vazio():
+	RETORNAR VAZIO
+
+FUNCAO usa_vazio(param):
+	SE param == VAZIO:
+		RETORNAR VERDADE
+	SENAO:
+		RETORNAR FALSO
+
+resultado = usa_vazio(x)
+
+SE x == VAZIO:
+	categoria = "vazio"
+SENAO:
+	categoria = "nao vazio"

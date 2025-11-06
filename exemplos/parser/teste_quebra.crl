@@ -1,0 +1,6 @@
+# Teste simples de QUEBRA
+contador = 0
+ENQUANTO contador < 10:
+	SE contador == 5:
+		QUEBRA
+	contador += 1

@@ -1,0 +1,8 @@
+# Teste de PASSAR
+FUNCAO funcao_vazia():
+	PASSAR
+
+FUNCAO outra_funcao():
+	x = 10
+	PASSAR
+	RETORNAR x

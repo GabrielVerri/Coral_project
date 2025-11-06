@@ -21,21 +21,21 @@ class FirstFollowSets:
         
         self.FIRST = {
             'Programa': {
-                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'ID',
+                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'VAZIO', 'ID',
                 'SE', 'ENQUANTO', 'PARA', 'FUNCAO', 'CLASSE',
                 'RETORNAR', 'QUEBRA', 'CONTINUA', 'PASSAR',
                 '(', '[', '{', '-', 'NAO', 'ε'  # ε indica que pode ser vazio
             },
             
             'Declaracao': {
-                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'ID',
+                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'VAZIO', 'ID',
                 'SE', 'ENQUANTO', 'PARA', 'FUNCAO', 'CLASSE',
                 'RETORNAR', 'QUEBRA', 'CONTINUA', 'PASSAR',
                 '(', '[', '{', '-', 'NAO'
             },
             
             'Expressao': {
-                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'ID',
+                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'VAZIO', 'ID',
                 '(', '[', '{', '-', 'NAO'
             },
             
@@ -44,7 +44,7 @@ class FirstFollowSets:
             },
             
             'Termo': {
-                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'ID',
+                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'VAZIO', 'ID',
                 '(', '[', '{', '-', 'NAO'
             },
             
@@ -53,7 +53,7 @@ class FirstFollowSets:
             },
             
             'Fator': {
-                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'ID',
+                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'VAZIO', 'ID',
                 '(', '[', '{', '-', 'NAO'
             },
             
@@ -62,7 +62,7 @@ class FirstFollowSets:
             },
             
             'FatorPrimario': {
-                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'ID',
+                'INTEIRO', 'DECIMAL', 'BOOLEANO', 'STRING', 'VAZIO', 'ID',
                 '(', '[', '{'
             },
             

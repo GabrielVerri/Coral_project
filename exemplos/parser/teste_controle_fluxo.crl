@@ -1,0 +1,32 @@
+# Teste de Controle de Fluxo - QUEBRA, CONTINUA, PASSAR e VAZIO
+
+# Teste 1: QUEBRA em loop ENQUANTO
+contador = 0
+ENQUANTO contador < 10:
+    SE contador == 5:
+        QUEBRA
+    contador += 1
+
+# Teste 2: CONTINUA em loop PARA
+PARA i DENTRODE [1, 2, 3, 4, 5]:
+    SE i == 3:
+        CONTINUA
+    resultado = i * 2
+
+# Teste 3: PASSAR em função vazia
+FUNCAO funcao_vazia():
+    PASSAR
+
+# Teste 4: VAZIO como valor
+valor_nulo = VAZIO
+SE valor_nulo == VAZIO:
+    resultado = VERDADE
+SENAO:
+    resultado = FALSO
+
+# Teste 5: RETORNAR VAZIO
+FUNCAO pode_retornar_vazio(condicao):
+    SE condicao:
+        RETORNAR 42
+    SENAO:
+        RETORNAR VAZIO
