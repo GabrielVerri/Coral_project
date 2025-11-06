@@ -14,9 +14,13 @@ if __name__ == "__main__":
 try:
     from src.parser.ast_nodes import *
     from src.parser.first_follow import FirstFollowSets
+    from src.utils import (PALAVRAS_RESERVADAS, OPERADORES_LOGICOS, 
+                           OPERADORES_BOOLEANOS, TIPO_MAP)
 except ModuleNotFoundError:
     from .ast_nodes import *
     from .first_follow import FirstFollowSets
+    from utils import (PALAVRAS_RESERVADAS, OPERADORES_LOGICOS,
+                       OPERADORES_BOOLEANOS, TIPO_MAP)
 
 
 class ErroSintatico(Exception):
@@ -57,37 +61,18 @@ class ParserCoral:
         if not self.token_atual:
             return False
         
-        palavras_reservadas = {
-            'SE', 'SENAO', 'SENAOSE', 'ENQUANTO', 'PARA', 'DENTRODE',
-            'FUNCAO', 'CLASSE', 'RETORNAR',
-            'QUEBRA', 'CONTINUA', 'PASSAR'
-        }
-        
-        operadores_logicos = {'E', 'OU', 'NAO'}
-        operadores_booleanos = {'VERDADE', 'FALSO'}
-        
-        tipo_map = {
-            'ID': 'IDENTIFICADOR',
-            'STRING': 'STRING',
-            'BOOLEANO': 'BOOLEANO',
-            'NEWLINE': 'NEWLINE',
-            'INDENTA': 'INDENTA',
-            'DEDENTA': 'DEDENTA',
-            'EOF': 'EOF'
-        }
-        
-        if tipo_esperado in palavras_reservadas:
+        if tipo_esperado in PALAVRAS_RESERVADAS:
             return (self.token_atual.tipo == 'PALAVRA_RESERVADA' and 
                     self.token_atual.lexema == tipo_esperado)
         
-        if tipo_esperado in operadores_logicos:
+        if tipo_esperado in OPERADORES_LOGICOS:
             return (self.token_atual.tipo == 'OPERADOR_LOGICO' and 
                     self.token_atual.lexema == tipo_esperado)
         
         if tipo_esperado == 'BOOLEANO':
             if self.token_atual.tipo == 'BOOLEANO':
                 return True
-            if self.token_atual.lexema in operadores_booleanos:
+            if self.token_atual.lexema in OPERADORES_BOOLEANOS:
                 return True
             return False
         
@@ -97,7 +82,7 @@ class ParserCoral:
                              '=', '+=', '-=', '*=', '/=', '%=']:
             return self.token_atual.lexema == tipo_esperado
         
-        tipo_verificar = tipo_map.get(tipo_esperado, tipo_esperado)
+        tipo_verificar = TIPO_MAP.get(tipo_esperado, tipo_esperado)
         return self.token_atual.tipo == tipo_verificar
     
     def consumir(self, tipo_esperado, mensagem_erro=None):
@@ -435,6 +420,11 @@ class ParserCoral:
             valor = token.lexema == 'VERDADE'
             return LiteralNode(valor, 'BOOLEANO', token.linha, token.coluna)
         
+        if self.verificar('VAZIO'):
+            token = self.token_atual
+            self.avancar()
+            return LiteralNode(None, 'VAZIO', token.linha, token.coluna)
+        
         if self.verificar('STRING'):
             token = self.token_atual
             self.avancar()
@@ -502,7 +492,7 @@ class ParserCoral:
         """
         argumentos = []
         
-        if self.token_atual and self.token_atual.tipo in [')', ']', '}']:
+        if self.token_atual and self.token_atual.lexema in [')', ']', '}']:
             return argumentos
         
         argumentos.append(self.expressao())
@@ -786,13 +776,8 @@ def main():
             codigo = f.read()
         
         print(f"{'='*70}")
-        print(f"Parser Coral - Análise Sintática")
+        print(f"Arquivo: {arquivo}")
         print(f"{'='*70}")
-        print(f"\nArquivo: {arquivo}")
-        print(f"\nCódigo fonte:")
-        print("-" * 70)
-        print(codigo)
-        print("-" * 70)
         
         # Análise léxica
         lexer = LexerCoral.analisar_arquivo(arquivo)

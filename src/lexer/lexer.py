@@ -7,6 +7,7 @@ sys.path.insert(0, src_dir)
 from lexer.AFD import get_afd
 from lexer.Token import Token
 from lexer.Buffer import BufferLeitura
+from utils import PALAVRAS_RESERVADAS
 
 class AnalisadorLexico:
     """Analisador léxico/Tokenizador para a linguagem Coral com suporte a INDENTA/DEDENTA."""
@@ -14,16 +15,7 @@ class AnalisadorLexico:
     def __init__(self, codigo_fonte):
         self.buffer_leitura = BufferLeitura(codigo_fonte)
         
-        self.palavras_reservadas = {
-            'SE', 'SENAO', 'SENAOSE', 'ENQUANTO', 'PARA', 'DENTRODE',
-            'INTEIRO', 'DECIMAL', 'TEXTO', 'BOOLEANO',
-            'DEF', 'FUNCAO', 'CLASSE', 'RETORNAR',
-            'QUEBRA', 'CONTINUA', 'PASSAR',
-            'GLOBAL', 'NAOLOCAL', 'IMPORTAR', 'DE', 'COMO',
-            'TENTE', 'EXCETO', 'FINALMENTE', 'LANCAR', 'AFIRMA',
-            'ESPERA', 'VAZIO', 'EIGUAL', 'LAMBDA', 'COM', 'DELETAR',
-            'ASSINCRONO', 'ENVIAR'
-        }
+        self.palavras_reservadas = PALAVRAS_RESERVADAS
 
         self.afd = get_afd()
         
@@ -50,16 +42,16 @@ class AnalisadorLexico:
         
         # Se a linha está vazia ou é comentário, ignora indentação
         if self.buffer_leitura.fim_arquivo():
-            return
+            return False
         
         char_atual = self.buffer_leitura.caractere_atual()
         if char_atual == '\n' or char_atual == '\r':
-            return  # Linha vazia
+            return False  # Linha vazia
         
         # Verifica se é comentário
         resto = self.buffer_leitura.resto_codigo()
         if resto.startswith('#'):
-            return  # Linha de comentário
+            return False  # Linha de comentário
         
         # Compara com o nível de indentação atual
         nivel_atual = self.pilha_indentacao[-1]
@@ -81,6 +73,8 @@ class AnalisadorLexico:
                 raise ValueError(
                     f"Indentação inconsistente na linha {pos_info['linha']}, coluna {pos_info['coluna']}"
                 )
+        
+        return True  # Linha contém código real
     
     def _reconhecer_proximo_token(self):
         """Reconhece e retorna o próximo token do código fonte."""
@@ -91,8 +85,11 @@ class AnalisadorLexico:
         # Processa indentação no início de linha
         if self.inicio_linha and self.nivel_parenteses == 0:
             pos_info = self.buffer_leitura.get_posicao_info()
-            self._processar_indentacao(pos_info)
-            self.inicio_linha = False
+            linha_tem_codigo = self._processar_indentacao(pos_info)
+            
+            # Só marca como não-início-de-linha se a linha tem código real
+            if linha_tem_codigo:
+                self.inicio_linha = False
             
             # Se gerou tokens de indentação, retorna o primeiro
             if self.tokens_pendentes:

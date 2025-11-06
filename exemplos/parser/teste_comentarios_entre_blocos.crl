@@ -1,0 +1,23 @@
+# Teste de comentários entre blocos de código
+
+# Bloco 1: Loop ENQUANTO
+x = 0
+ENQUANTO x < 5:
+    x += 1
+
+# Bloco 2: Loop PARA
+PARA i DENTRODE [1, 2, 3]:
+    y = i * 2
+
+# Bloco 3: Estrutura SE
+SE x > 0:
+    resultado = VERDADE
+SENAO:
+    resultado = FALSO
+
+# Bloco 4: Função
+FUNCAO teste():
+    RETORNAR 42
+
+# Bloco 5: Chamada de função
+valor = teste()
