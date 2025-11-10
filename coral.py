@@ -114,9 +114,15 @@ class CoralInterpreter:
         
         Args:
             modo: 'lex' (apenas léxico), 'parse' (apenas sintático), 
-                  'completo' (análise completa + execução), 'ast' (mostra AST)
+                  'completo' (análise completa + execução), 'ast' (mostra AST),
+                  'cat' (exibe conteúdo do arquivo)
         """
         self.carregar_arquivo()
+        
+        if modo == 'cat':
+            # Exibe o conteúdo do arquivo
+            print(self.codigo)
+            return True
         
         if modo == 'lex':
             return self.analise_lexica()
@@ -143,20 +149,8 @@ class CoralInterpreter:
             return True
         
         elif modo == 'completo':
-            # Análise Léxica (silenciosa)
-            if not self.analise_lexica(exibir=False):
-                return False
-            
-            # Análise Sintática (silenciosa)
-            if not self.analise_sintatica(exibir=False):
-                return False
-            
-            # Execução
-            print(f"{'='*70}")
-            print(f"Coral Language 🐍 Interpreter")
-            print(f"{'='*70}\n")
-            
-            executar_programa(self.ast, exibir_mensagem=False)
+            # Exibe o conteúdo do arquivo
+            print(self.codigo)
             
             return True
 
@@ -173,6 +167,7 @@ Exemplos de uso:
   coral --lex programa.crl        # Apenas análise léxica
   coral --parse programa.crl      # Apenas análise sintática
   coral --ast programa.crl        # Exibe a AST
+  coral --cat programa.crl        # Exibe o conteúdo do arquivo
   coral --version                 # Exibe a versão
   
 Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
@@ -204,6 +199,12 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
     )
     
     parser.add_argument(
+        '--cat',
+        action='store_true',
+        help='Exibir o conteúdo do arquivo'
+    )
+    
+    parser.add_argument(
         '--version', '-v',
         action='version',
         version=f'Coral v{__version__}'
@@ -230,6 +231,8 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
         modo = 'parse'
     elif args.ast:
         modo = 'ast'
+    elif args.cat:
+        modo = 'cat'
     else:
         modo = 'completo'
     
