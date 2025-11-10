@@ -224,7 +224,9 @@ FOLLOW(Expressao) = {')', ':', ',', NEWLINE, ...}
 3. ✓ **FIRST(α) ∩ FIRST(β) = ∅** para A → α | β
 4. ✓ **Se ε ∈ FIRST(A), então FIRST(A) ∩ FOLLOW(A) = ∅**
 
-**Resultado:** Gramática Coral é **LL(1)** (analisável por parser descendente preditivo).
+**Resposta curta e justificada:** **Sim.** A gramática é LL(1).
+
+Justificativa: atende aos quatro critérios acima — não possui recursão à esquerda direta, as produções foram fatoradas quando necessário, os conjuntos FIRST das alternativas são disjuntos, e nos casos em que ε ∈ FIRST(A) vale que FIRST(A) ∩ FOLLOW(A) = ∅. Portanto pode ser analisada por um parser descendente preditivo LL(1).
 
 ## **3.7 Exemplo Prático de Análise LL(1)**
 
