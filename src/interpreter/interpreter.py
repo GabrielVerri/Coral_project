@@ -1,0 +1,401 @@
+"""
+Interpretador da Linguagem Coral.
+
+Percorre a AST (Árvore Sintática Abstrata) e executa o código,
+mantendo um ambiente de variáveis e funções.
+"""
+
+import sys
+import os
+
+# Adiciona o diretório src ao path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+try:
+    from src.parser.ast_nodes import *
+except ModuleNotFoundError:
+    from parser.ast_nodes import *
+
+
+class ErroExecucao(Exception):
+    """Exceção lançada durante a execução do programa."""
+    def __init__(self, mensagem, linha=None, coluna=None):
+        self.mensagem = mensagem
+        self.linha = linha
+        self.coluna = coluna
+        super().__init__(self.formatar_mensagem())
+    
+    def formatar_mensagem(self):
+        if self.linha is not None and self.coluna is not None:
+            return f"Erro de execução na linha {self.linha}, coluna {self.coluna}: {self.mensagem}"
+        return f"Erro de execução: {self.mensagem}"
+
+
+class Ambiente:
+    """Gerencia o escopo de variáveis e funções."""
+    
+    def __init__(self, pai=None):
+        self.variaveis = {}
+        self.funcoes = {}
+        self.pai = pai
+    
+    def definir_variavel(self, nome, valor):
+        """Define uma variável no escopo atual."""
+        self.variaveis[nome] = valor
+    
+    def obter_variavel(self, nome):
+        """Obtém o valor de uma variável, procurando em escopos pai se necessário."""
+        if nome in self.variaveis:
+            return self.variaveis[nome]
+        elif self.pai:
+            return self.pai.obter_variavel(nome)
+        else:
+            raise ErroExecucao(f"Variável '{nome}' não definida")
+    
+    def definir_funcao(self, nome, funcao):
+        """Define uma função no escopo atual."""
+        self.funcoes[nome] = funcao
+    
+    def obter_funcao(self, nome):
+        """Obtém uma função, procurando em escopos pai se necessário."""
+        if nome in self.funcoes:
+            return self.funcoes[nome]
+        elif self.pai:
+            return self.pai.obter_funcao(nome)
+        else:
+            raise ErroExecucao(f"Função '{nome}' não definida")
+    
+    def existe_variavel(self, nome):
+        """Verifica se uma variável existe."""
+        return nome in self.variaveis or (self.pai and self.pai.existe_variavel(nome))
+
+
+class RetornoExcecao(Exception):
+    """Exceção especial para controle de fluxo de RETORNAR."""
+    def __init__(self, valor):
+        self.valor = valor
+
+
+class QuebraExcecao(Exception):
+    """Exceção especial para controle de fluxo de QUEBRA."""
+    pass
+
+
+class ContinuaExcecao(Exception):
+    """Exceção especial para controle de fluxo de CONTINUA."""
+    pass
+
+
+class InterpretadorCoral:
+    """Interpretador que executa a AST da linguagem Coral."""
+    
+    def __init__(self):
+        self.ambiente_global = Ambiente()
+        self.ambiente_atual = self.ambiente_global
+        self._registrar_funcoes_nativas()
+    
+    def _registrar_funcoes_nativas(self):
+        """Registra funções nativas (built-in) da linguagem."""
+        # Função ESCREVA para imprimir na tela
+        self.ambiente_global.definir_funcao('ESCREVA', lambda *args: print(*args))
+        # Função LER para ler entrada do usuário
+        self.ambiente_global.definir_funcao('LER', lambda prompt="": input(prompt))
+        # Função TIPO para obter o tipo de uma variável
+        self.ambiente_global.definir_funcao('TIPO', lambda x: type(x).__name__)
+        # Função TAMANHO para obter tamanho de lista/string
+        self.ambiente_global.definir_funcao('TAMANHO', lambda x: len(x))
+    
+    def interpretar(self, ast):
+        """
+        Interpreta a AST completa.
+        
+        Args:
+            ast: ProgramaNode - raiz da AST
+        """
+        try:
+            self.visitar(ast)
+        except ErroExecucao as e:
+            print(f"\n{e.formatar_mensagem()}")
+            sys.exit(1)
+    
+    def visitar(self, no):
+        """
+        Visita um nó da AST e executa a ação apropriada.
+        
+        Args:
+            no: Nó da AST
+            
+        Returns:
+            Valor resultante da execução do nó
+        """
+        nome_metodo = f'visitar_{type(no).__name__}'
+        metodo = getattr(self, nome_metodo, self.visitar_generico)
+        return metodo(no)
+    
+    def visitar_generico(self, no):
+        """Método chamado quando não há implementação específica."""
+        raise ErroExecucao(f"Nó '{type(no).__name__}' não implementado no interpretador")
+    
+    def visitar_ProgramaNode(self, no):
+        """Executa o programa completo."""
+        for declaracao in no.declaracoes:
+            self.visitar(declaracao)
+    
+    def visitar_LiteralNode(self, no):
+        """Retorna o valor literal."""
+        return no.valor
+    
+    def visitar_IdentificadorNode(self, no):
+        """Retorna o valor da variável."""
+        return self.ambiente_atual.obter_variavel(no.nome)
+    
+    def visitar_AtribuicaoNode(self, no):
+        """Executa uma atribuição de variável."""
+        nome = no.identificador.nome
+        valor = self.visitar(no.expressao)
+        
+        # Operadores de atribuição composta
+        if no.operador == '=':
+            self.ambiente_atual.definir_variavel(nome, valor)
+        elif no.operador == '+=':
+            valor_atual = self.ambiente_atual.obter_variavel(nome)
+            self.ambiente_atual.definir_variavel(nome, valor_atual + valor)
+        elif no.operador == '-=':
+            valor_atual = self.ambiente_atual.obter_variavel(nome)
+            self.ambiente_atual.definir_variavel(nome, valor_atual - valor)
+        elif no.operador == '*=':
+            valor_atual = self.ambiente_atual.obter_variavel(nome)
+            self.ambiente_atual.definir_variavel(nome, valor_atual * valor)
+        elif no.operador == '/=':
+            valor_atual = self.ambiente_atual.obter_variavel(nome)
+            self.ambiente_atual.definir_variavel(nome, valor_atual / valor)
+        elif no.operador == '%=':
+            valor_atual = self.ambiente_atual.obter_variavel(nome)
+            self.ambiente_atual.definir_variavel(nome, valor_atual % valor)
+    
+    def visitar_ExpressaoBinariaNode(self, no):
+        """Executa uma expressão binária."""
+        esquerda = self.visitar(no.esquerda)
+        direita = self.visitar(no.direita)
+        operador = no.operador.lexema
+        
+        # Operadores aritméticos
+        if operador == '+':
+            return esquerda + direita
+        elif operador == '-':
+            return esquerda - direita
+        elif operador == '*':
+            return esquerda * direita
+        elif operador == '/':
+            if direita == 0:
+                raise ErroExecucao("Divisão por zero", no.linha, no.coluna)
+            return esquerda / direita
+        elif operador == '%':
+            return esquerda % direita
+        elif operador == '**':
+            return esquerda ** direita
+        
+        # Operadores relacionais
+        elif operador == '==':
+            return esquerda == direita
+        elif operador == '!=':
+            return esquerda != direita
+        elif operador == '<':
+            return esquerda < direita
+        elif operador == '>':
+            return esquerda > direita
+        elif operador == '<=':
+            return esquerda <= direita
+        elif operador == '>=':
+            return esquerda >= direita
+        
+        # Operadores lógicos
+        elif operador == 'E':
+            return esquerda and direita
+        elif operador == 'OU':
+            return esquerda or direita
+        
+        else:
+            raise ErroExecucao(f"Operador '{operador}' não reconhecido", no.linha, no.coluna)
+    
+    def visitar_ExpressaoUnariaNode(self, no):
+        """Executa uma expressão unária."""
+        operador = no.operador.lexema
+        expressao = self.visitar(no.expressao)
+        
+        if operador == '-':
+            return -expressao
+        elif operador == 'NAO':
+            return not expressao
+        else:
+            raise ErroExecucao(f"Operador unário '{operador}' não reconhecido", no.linha, no.coluna)
+    
+    def visitar_ChamadaFuncaoNode(self, no):
+        """Executa uma chamada de função."""
+        nome_funcao = no.nome
+        
+        # Avalia os argumentos
+        argumentos = [self.visitar(arg) for arg in no.argumentos]
+        
+        # Busca a função
+        funcao = self.ambiente_atual.obter_funcao(nome_funcao)
+        
+        # Se for função nativa (Python)
+        if callable(funcao) and not isinstance(funcao, FuncaoNode):
+            return funcao(*argumentos)
+        
+        # Se for função definida pelo usuário
+        if isinstance(funcao, FuncaoNode):
+            return self._executar_funcao_usuario(funcao, argumentos)
+        
+        raise ErroExecucao(f"'{nome_funcao}' não é uma função válida", no.linha, no.coluna)
+    
+    def _executar_funcao_usuario(self, funcao, argumentos):
+        """Executa uma função definida pelo usuário."""
+        # Verifica número de argumentos
+        params_obrigatorios = [p for p in funcao.parametros if p.valor_padrao is None]
+        if len(argumentos) < len(params_obrigatorios):
+            raise ErroExecucao(
+                f"Função '{funcao.nome}' espera {len(params_obrigatorios)} argumentos, "
+                f"mas recebeu {len(argumentos)}"
+            )
+        
+        # Cria novo ambiente para a função
+        ambiente_funcao = Ambiente(self.ambiente_global)
+        
+        # Vincula parâmetros aos argumentos
+        for i, parametro in enumerate(funcao.parametros):
+            if i < len(argumentos):
+                ambiente_funcao.definir_variavel(parametro.nome, argumentos[i])
+            elif parametro.valor_padrao is not None:
+                # Usa valor padrão
+                ambiente_anterior = self.ambiente_atual
+                self.ambiente_atual = ambiente_funcao
+                valor_padrao = self.visitar(parametro.valor_padrao)
+                self.ambiente_atual = ambiente_anterior
+                ambiente_funcao.definir_variavel(parametro.nome, valor_padrao)
+        
+        # Executa o corpo da função
+        ambiente_anterior = self.ambiente_atual
+        self.ambiente_atual = ambiente_funcao
+        
+        try:
+            self.visitar(funcao.bloco)
+            retorno = None  # Função sem retorno explícito retorna None
+        except RetornoExcecao as e:
+            retorno = e.valor
+        finally:
+            self.ambiente_atual = ambiente_anterior
+        
+        return retorno
+    
+    def visitar_FuncaoNode(self, no):
+        """Define uma função."""
+        self.ambiente_atual.definir_funcao(no.nome, no)
+    
+    def visitar_BlocoNode(self, no):
+        """Executa um bloco de declarações."""
+        for declaracao in no.declaracoes:
+            self.visitar(declaracao)
+    
+    def visitar_SeNode(self, no):
+        """Executa uma estrutura condicional SE/SENAOSE/SENAO."""
+        # Testa a condição principal
+        if self.visitar(no.condicao):
+            self.visitar(no.bloco_se)
+            return
+        
+        # Testa os SENAOSE
+        for condicao, bloco in no.blocos_senaose:
+            if self.visitar(condicao):
+                self.visitar(bloco)
+                return
+        
+        # Executa o SENAO se existir
+        if no.bloco_senao:
+            self.visitar(no.bloco_senao)
+    
+    def visitar_EnquantoNode(self, no):
+        """Executa um laço ENQUANTO."""
+        try:
+            while self.visitar(no.condicao):
+                try:
+                    self.visitar(no.bloco)
+                except ContinuaExcecao:
+                    continue
+        except QuebraExcecao:
+            pass
+    
+    def visitar_ParaNode(self, no):
+        """Executa um laço PARA."""
+        iteravel = self.visitar(no.iteravel)
+        nome_variavel = no.variavel.nome
+        
+        try:
+            for valor in iteravel:
+                self.ambiente_atual.definir_variavel(nome_variavel, valor)
+                try:
+                    self.visitar(no.bloco)
+                except ContinuaExcecao:
+                    continue
+        except QuebraExcecao:
+            pass
+    
+    def visitar_RetornarNode(self, no):
+        """Executa um RETORNAR."""
+        valor = None
+        if no.expressao:
+            valor = self.visitar(no.expressao)
+        raise RetornoExcecao(valor)
+    
+    def visitar_QuebraNode(self, no):
+        """Executa um QUEBRA."""
+        raise QuebraExcecao()
+    
+    def visitar_ContinuaNode(self, no):
+        """Executa um CONTINUA."""
+        raise ContinuaExcecao()
+    
+    def visitar_PassarNode(self, no):
+        """Executa um PASSAR (não faz nada)."""
+        pass
+    
+    def visitar_ListaNode(self, no):
+        """Cria uma lista."""
+        return [self.visitar(elemento) for elemento in no.elementos]
+    
+    def visitar_DicionarioNode(self, no):
+        """Cria um dicionário."""
+        resultado = {}
+        for chave_no, valor_no in no.pares:
+            chave = self.visitar(chave_no)
+            valor = self.visitar(valor_no)
+            resultado[chave] = valor
+        return resultado
+    
+    def visitar_ClasseNode(self, no):
+        """Define uma classe (implementação básica)."""
+        # TODO: Implementar classes completas
+        raise ErroExecucao("Classes ainda não estão completamente implementadas", no.linha, no.coluna)
+
+
+def executar_programa(ast, exibir_mensagem=True):
+    """
+    Executa um programa Coral a partir da AST.
+    
+    Args:
+        ast: ProgramaNode - raiz da AST
+        exibir_mensagem: Se deve exibir mensagem de conclusão
+    """
+    if exibir_mensagem:
+        print(f"{'='*70}")
+        print(f"Executando Programa Coral")
+        print(f"{'='*70}\n")
+    
+    interpretador = InterpretadorCoral()
+    interpretador.interpretar(ast)
+    
+    if exibir_mensagem:
+        print(f"\n{'='*70}")
+        print(f"Programa executado com sucesso!")
+        print(f"{'='*70}")

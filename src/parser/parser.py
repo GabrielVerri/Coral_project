@@ -14,12 +14,12 @@ if __name__ == "__main__":
 try:
     from src.parser.ast_nodes import *
     from src.parser.first_follow import FirstFollowSets
-    from src.utils import (PALAVRAS_RESERVADAS, OPERADORES_LOGICOS, 
+    from src.utils.utils import (PALAVRAS_RESERVADAS, OPERADORES_LOGICOS, 
                            OPERADORES_BOOLEANOS, TIPO_MAP)
 except ModuleNotFoundError:
     from .ast_nodes import *
     from .first_follow import FirstFollowSets
-    from utils import (PALAVRAS_RESERVADAS, OPERADORES_LOGICOS,
+    from utils.utils import (PALAVRAS_RESERVADAS, OPERADORES_LOGICOS,
                        OPERADORES_BOOLEANOS, TIPO_MAP)
 
 
