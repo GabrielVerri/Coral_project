@@ -142,8 +142,32 @@ class InterpretadorCoral:
             self.visitar(declaracao)
     
     def visitar_LiteralNode(self, no):
-        """Retorna o valor literal."""
-        return no.valor
+        """Retorna o valor literal, processando interpolação de strings se necessário."""
+        valor = no.valor
+        
+        # Se for string formatada (f"string"), processa interpolação {variavel}
+        if isinstance(valor, str) and hasattr(no, 'formatada') and no.formatada:
+            valor = self._processar_interpolacao(valor)
+        
+        return valor
+    
+    def _processar_interpolacao(self, texto):
+        """Processa interpolação de variáveis em strings usando {variavel}."""
+        import re
+        
+        # Encontra todas as ocorrências de {variavel}
+        def substituir(match):
+            nome_var = match.group(1)
+            try:
+                valor = self.ambiente_atual.obter_variavel(nome_var)
+                return str(valor)
+            except ErroExecucao:
+                # Se variável não existe, mantém o texto original
+                return match.group(0)
+        
+        # Substitui {variavel} pelos valores
+        texto_interpolado = re.sub(r'\{([a-zA-Z_][a-zA-Z0-9_]*)\}', substituir, texto)
+        return texto_interpolado
     
     def visitar_IdentificadorNode(self, no):
         """Retorna o valor da variável."""

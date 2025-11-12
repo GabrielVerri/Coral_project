@@ -60,13 +60,15 @@ class ExpressaoUnariaNode(ExpressaoNode):
 
 class LiteralNode(ExpressaoNode):
     """Literal (número, string, booleano)."""
-    def __init__(self, valor, tipo, linha=None, coluna=None):
+    def __init__(self, valor, tipo, linha=None, coluna=None, formatada=False):
         super().__init__(linha, coluna)
         self.valor = valor
         self.tipo = tipo
+        self.formatada = formatada  # True se for f"string"
     
     def __repr__(self):
-        return f"Literal({self.valor}:{self.tipo})"
+        prefixo = "f" if self.formatada else ""
+        return f"Literal({prefixo}{self.valor}:{self.tipo})"
 
 
 class IdentificadorNode(ExpressaoNode):

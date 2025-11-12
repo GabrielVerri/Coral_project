@@ -427,13 +427,26 @@ class ParserCoral:
         
         if self.verificar('STRING') or self.verificar('STRING_MULTILINE'):
             token = self.token_atual
-            self.avancar()
-            # Remove aspas: " ou ' (1 char) ou """ ou ''' (3 chars)
-            if token.lexema.startswith('"""') or token.lexema.startswith("'''"):
-                valor = token.lexema[3:-3] if len(token.lexema) >= 6 else token.lexema
+            formatada = False
+            
+            # Verifica se tem 'f' antes da string
+            if token.lexema.startswith('f"') or token.lexema.startswith("f'") or \
+               token.lexema.startswith('f"""') or token.lexema.startswith("f'''"):
+                formatada = True
+                # Remove o 'f' do início
+                if token.lexema.startswith('f"""') or token.lexema.startswith("f'''"):
+                    valor = token.lexema[4:-3] if len(token.lexema) >= 7 else token.lexema[1:]
+                else:
+                    valor = token.lexema[2:-1] if len(token.lexema) >= 3 else token.lexema[1:]
             else:
-                valor = token.lexema[1:-1] if len(token.lexema) >= 2 else token.lexema
-            return LiteralNode(valor, 'STRING', token.linha, token.coluna)
+                # Remove aspas: " ou ' (1 char) ou """ ou ''' (3 chars)
+                if token.lexema.startswith('"""') or token.lexema.startswith("'''"):
+                    valor = token.lexema[3:-3] if len(token.lexema) >= 6 else token.lexema
+                else:
+                    valor = token.lexema[1:-1] if len(token.lexema) >= 2 else token.lexema
+            
+            self.avancar()
+            return LiteralNode(valor, 'STRING', token.linha, token.coluna, formatada=formatada)
         
         if self.verificar('ID'):
             token = self.token_atual

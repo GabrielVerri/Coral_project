@@ -47,6 +47,26 @@ class AFDUnificado:
         if not entrada:
             return None
 
+        # F-strings
+        if entrada.startswith('f"""') or entrada.startswith("f'''"):
+            aspas = entrada[1:4]
+            if len(entrada) >= 7:
+                pos = entrada.find(aspas, 4)
+                if pos >= 0:
+                    return (entrada[:pos+3], pos+3, "STRING_MULTILINE")
+        elif entrada.startswith('f"') or entrada.startswith("f'"):
+            delim = entrada[1]
+            pos = 2
+            while pos < len(entrada):
+                if entrada[pos] == '\\':
+                    pos += 2
+                elif entrada[pos] == delim:
+                    return (entrada[:pos+1], pos+1, "STRING")
+                elif entrada[pos] == '\n':
+                    break  # String não fechada
+                else:
+                    pos += 1
+
         # Identificadores e palavras reservadas
         if entrada[0] == '_' or entrada[0].isalpha():
             pos = self._consume_identifier(entrada, 0)
