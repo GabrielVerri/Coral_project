@@ -149,10 +149,22 @@ class CoralInterpreter:
             return True
         
         elif modo == 'completo':
-            # Exibe o conteúdo do arquivo
-            print(self.codigo)
+            # Modo completo: executa o programa e mostra apenas o output
+            if not self.analise_lexica(exibir=False):
+                return False
             
-            return True
+            if not self.analise_sintatica(exibir=False):
+                return False
+            
+            # Executa o programa (apenas output, sem mensagens)
+            try:
+                from interpreter.interpreter import InterpretadorCoral
+                interpretador = InterpretadorCoral()
+                interpretador.interpretar(self.ast)
+                return True
+            except Exception as e:
+                print(f"Erro durante execução: {e}")
+                return False
 
 
 def main():

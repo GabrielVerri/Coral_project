@@ -425,10 +425,14 @@ class ParserCoral:
             self.avancar()
             return LiteralNode(None, 'VAZIO', token.linha, token.coluna)
         
-        if self.verificar('STRING'):
+        if self.verificar('STRING') or self.verificar('STRING_MULTILINE'):
             token = self.token_atual
             self.avancar()
-            valor = token.lexema[1:-1] if len(token.lexema) >= 2 else token.lexema
+            # Remove aspas: " ou ' (1 char) ou """ ou ''' (3 chars)
+            if token.lexema.startswith('"""') or token.lexema.startswith("'''"):
+                valor = token.lexema[3:-3] if len(token.lexema) >= 6 else token.lexema
+            else:
+                valor = token.lexema[1:-1] if len(token.lexema) >= 2 else token.lexema
             return LiteralNode(valor, 'STRING', token.linha, token.coluna)
         
         if self.verificar('ID'):

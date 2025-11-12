@@ -48,6 +48,7 @@ DELIMITADORES = {'(', ')', '[', ']', '{', '}', ':', ','}
 TIPO_MAP = {
     'ID': 'IDENTIFICADOR',
     'STRING': 'STRING',
+    'STRING_MULTILINE': 'STRING_MULTILINE',
     'BOOLEANO': 'BOOLEANO',
     'NEWLINE': 'NEWLINE',
     'INDENTA': 'INDENTA',
