@@ -1,0 +1,50 @@
+# Teste de Calculadora com Validação de Tipos - Linguagem Coral
+
+CLASSE Calculadora:
+    FUNCAO __construtor__():
+        self.total_operacoes = 0
+    
+    FUNCAO somar(a: INTEIRO, b: INTEIRO) -> INTEIRO:
+        self.total_operacoes = self.total_operacoes + 1
+        RETORNAR a + b
+    
+    FUNCAO subtrair(a: INTEIRO, b: INTEIRO) -> INTEIRO:
+        self.total_operacoes = self.total_operacoes + 1
+        RETORNAR a - b
+    
+    FUNCAO multiplicar(a: INTEIRO, b: INTEIRO) -> INTEIRO:
+        self.total_operacoes = self.total_operacoes + 1
+        RETORNAR a * b
+    
+    FUNCAO dividir(a: DECIMAL, b: DECIMAL) -> DECIMAL:
+        SE b == 0:
+            ESCREVA("Erro: Divisão por zero!")
+            RETORNAR 0.0
+        self.total_operacoes = self.total_operacoes + 1
+        RETORNAR a / b
+    
+    FUNCAO potencia(base: INTEIRO, expoente: INTEIRO) -> INTEIRO:
+        self.total_operacoes = self.total_operacoes + 1
+        RETORNAR base ** expoente
+
+# Cria calculadora
+calc = Calculadora()
+ESCREVA("=== CALCULADORA CORAL ===")
+ESCREVA()
+
+# Operações básicas
+ESCREVA("Soma: 15 + 7 =", calc.somar(15, 7))
+ESCREVA("Subtração: 20 - 8 =", calc.subtrair(20, 8))
+ESCREVA("Multiplicação: 6 * 7 =", calc.multiplicar(6, 7))
+ESCREVA("Divisão: 10.0 / 2.5 =", calc.dividir(10.0, 2.5))
+ESCREVA("Potência: 2 ** 8 =", calc.potencia(2, 8))
+
+ESCREVA(f"Total de operações realizadas: {calc.total_operacoes}")
+
+# Demonstra validação de tipos (comentado)
+ESCREVA("=== VALIDAÇÃO DE TIPOS ===")
+ESCREVA("Tentar passar tipos errados causaria erro:")
+ESCREVA("  calc.somar(10, 'texto')  <- TEXTO onde espera INTEIRO")
+ESCREVA("  calc.dividir(5, 2)       <- INTEIRO onde espera DECIMAL")
+
+# ESCREVA(calc.somar(10, "texto")) # Descomente para ver o erro de tipo

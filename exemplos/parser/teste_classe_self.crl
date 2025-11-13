@@ -1,0 +1,20 @@
+# Teste de Classes com self - Linguagem Coral
+
+CLASSE Pessoa:
+    FUNCAO __construtor__(nome: TEXTO, idade: INTEIRO):
+        self.nome = nome
+        self.idade = idade
+        self.ativo = VERDADE
+    
+    FUNCAO apresentar():
+        ESCREVA(f"Olá, meu nome é {self.nome}")
+        ESCREVA(f"Tenho {self.idade} anos")
+    
+    FUNCAO aniversario():
+        self.idade = self.idade + 1
+        ESCREVA(f"{self.nome} agora tem {self.idade} anos!")
+
+# Cria pessoa
+pessoa1 = Pessoa("Ian", 21)
+pessoa1.apresentar()
+pessoa1.aniversario()

@@ -17,12 +17,12 @@ import sys
 import os
 import argparse
 
-# Adiciona o diretório src ao path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+# Adiciona o diretório raiz ao path
+sys.path.insert(0, os.path.dirname(__file__))
 
-from lexer.lexer import LexerCoral
-from parser.parser import ParserCoral, exibir_ast, ErroSintatico
-from interpreter.interpreter import executar_programa
+from src.lexer.lexer import LexerCoral
+from src.parser.parser import ParserCoral, exibir_ast, ErroSintatico
+from src.interpreter.interpreter import executar_programa
 
 __version__ = "0.1.0"
 __author__ = "Coral Language Team"
@@ -109,14 +109,7 @@ class CoralInterpreter:
             return False
     
     def executar(self, modo='completo'):
-        """
-        Executa o interpretador no modo especificado.
-        
-        Args:
-            modo: 'lex' (apenas léxico), 'parse' (apenas sintático), 
-                  'completo' (análise completa + execução), 'ast' (mostra AST),
-                  'cat' (exibe conteúdo do arquivo)
-        """
+        """Executa o interpretador no modo especificado."""
         self.carregar_arquivo()
         
         if modo == 'cat':
@@ -158,7 +151,7 @@ class CoralInterpreter:
             
             # Executa o programa (apenas output, sem mensagens)
             try:
-                from interpreter.interpreter import InterpretadorCoral
+                from src.interpreter.interpreter import InterpretadorCoral
                 interpretador = InterpretadorCoral()
                 interpretador.interpretar(self.ast)
                 return True

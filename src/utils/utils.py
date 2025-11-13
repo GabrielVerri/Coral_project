@@ -29,6 +29,10 @@ PALAVRAS_RESERVADAS = {
     'VAZIO',
 }
 
+# ===== TIPOS PRIMITIVOS (para anotações de tipo) =====
+
+TIPOS_PRIMITIVOS = {'INTEIRO', 'DECIMAL', 'TEXTO', 'BOOLEANO', 'LISTA', 'DICIONARIO'}
+
 # ===== OPERADORES =====
 
 OPERADORES_LOGICOS = {'E', 'OU', 'NAO'}
@@ -73,6 +77,9 @@ TABELA_PALAVRAS_RESERVADAS = """
 ║                                                                   ║
 ║ Literais e Tipos:                                                 ║
 ║   VAZIO, VERDADE, FALSO                                           ║
+║                                                                   ║
+║ Tipos (Anotações):                                                ║
+║   INTEIRO, DECIMAL, TEXTO, BOOLEANO, LISTA, DICIONARIO            ║
 ╚═══════════════════════════════════════════════════════════════════╝
 """
 

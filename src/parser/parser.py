@@ -192,18 +192,34 @@ class ParserCoral:
         """
         Trata expressões ou atribuições.
         Se encontrar ID seguido de =, +=, -=, etc., é atribuição.
+        Para self.atributo = valor, procura até encontrar operador de atribuição.
         Caso contrário, é expressão.
         """
         if self.verificar('ID'):
-            proximo = self.olhar_adiante(1)
-            if proximo and proximo.lexema in ['=', '+=', '-=', '*=', '/=', '%=']:
-                return self.atribuicao()
+            # Olha à frente para verificar se é atribuição
+            offset = 1
+            while offset < len(self.tokens) - self.posicao:
+                token_seguinte = self.olhar_adiante(offset)
+                if token_seguinte is None:
+                    break
+                
+                # Se encontrou operador de atribuição, é atribuição
+                if token_seguinte.lexema in ['=', '+=', '-=', '*=', '/=', '%=']:
+                    return self.atribuicao()
+                
+                # Se encontrou '.', continua olhando (pode ser self.atributo =)
+                if token_seguinte.lexema == '.':
+                    offset += 2  # Pula '.' e próximo ID
+                    continue
+                
+                # Qualquer outra coisa, não é atribuição
+                break
         
         return self.expressao()
     
     def atribuicao(self):
         """
-        Processa uma atribuição de variável.
+        Processa uma atribuição de variável ou atributo.
         
         Returns:
             AtribuicaoNode: Nó de atribuição.
@@ -214,6 +230,15 @@ class ParserCoral:
             identificador_token.linha,
             identificador_token.coluna
         )
+        
+        # Suporte para self.atributo = valor
+        from .ast_nodes import AcessoAtributoNode
+        alvo = identificador
+        
+        while self.token_atual and self.token_atual.lexema == '.':
+            self.avancar()  # Consome '.'
+            atributo_token = self.consumir('ID', "Esperado nome do atributo após '.'")
+            alvo = AcessoAtributoNode(alvo, atributo_token.lexema, atributo_token.linha, atributo_token.coluna)
         
         operador = self.token_atual
         if operador.lexema not in ['=', '+=', '-=', '*=', '/=', '%=']:
@@ -227,7 +252,7 @@ class ParserCoral:
         expressao = self.expressao()
         
         return AtribuicaoNode(
-            identificador,
+            alvo,
             operador.lexema,
             expressao,
             identificador_token.linha,
@@ -280,15 +305,7 @@ class ParserCoral:
         return self.termo_resto(soma)
     
     def termo_resto(self, esquerda):
-        """
-        Processa o resto de um termo (operadores relacionais).
-        
-        Args:
-            esquerda: Nó da expressão à esquerda.
-            
-        Returns:
-            ExpressaoNode: Nó completo ou o nó esquerda se não houver continuação.
-        """
+        """Processa o resto de um termo (operadores relacionais)."""
         if self.token_atual and self.token_atual.lexema in ['==', '!=', '<', '>', '<=', '>=']:
             operador = self.token_atual
             self.avancar()
@@ -305,25 +322,12 @@ class ParserCoral:
         return esquerda
     
     def soma(self):
-        """
-        Processa uma soma (fator seguido de operadores de adição e subtração).
-        
-        Returns:
-            ExpressaoNode: Nó de soma.
-        """
+        """Processa uma soma (fator seguido de operadores de adição e subtração)."""
         fator = self.fator()
         return self.soma_resto(fator)
     
     def soma_resto(self, esquerda):
-        """
-        Processa o resto de uma soma (operadores de adição e subtração).
-        
-        Args:
-            esquerda: Nó da expressão à esquerda.
-            
-        Returns:
-            ExpressaoNode: Nó completo ou o nó esquerda se não houver continuação.
-        """
+        """Processa o resto de uma soma (operadores de adição e subtração)."""
         if self.token_atual and self.token_atual.lexema in ['+', '-']:
             operador = self.token_atual
             self.avancar()
@@ -340,25 +344,12 @@ class ParserCoral:
         return esquerda
     
     def fator(self):
-        """
-        Processa um fator (exponenciação seguido de operadores de multiplicação).
-        
-        Returns:
-            ExpressaoNode: Nó de fator.
-        """
+        """Processa um fator (exponenciação seguido de operadores de multiplicação). """
         exponencial = self.exponenciacao()
         return self.fator_resto(exponencial)
     
     def fator_resto(self, esquerda):
-        """
-        Processa o resto de um fator (operadores de multiplicação, divisão e módulo).
-        
-        Args:
-            esquerda: Nó da expressão à esquerda.
-            
-        Returns:
-            ExpressaoNode: Nó completo ou o nó esquerda se não houver continuação.
-        """
+        """Processa o resto de um fator (operadores de multiplicação, divisão e módulo)."""
         if self.token_atual and self.token_atual.lexema in ['*', '/', '%']:
             operador = self.token_atual
             self.avancar()
@@ -375,12 +366,7 @@ class ParserCoral:
         return esquerda
     
     def exponenciacao(self):
-        """
-        Processa exponenciação com associatividade à direita.
-        
-        Returns:
-            ExpressaoNode: Nó de exponenciação.
-        """
+        """Processa exponenciação com associatividade à direita."""
         base = self.fator_primario()
         
         if self.token_atual and self.token_atual.lexema == '**':
@@ -398,12 +384,7 @@ class ParserCoral:
         return base
     
     def fator_primario(self):
-        """
-        Processa um fator primário (literais, identificadores, operadores unários, etc.).
-        
-        Returns:
-            ExpressaoNode: Nó de fator primário.
-        """
+        """Processa um fator primário (literais, identificadores, operadores unários, etc.)."""
         if self.verificar('INTEIRO'):
             token = self.token_atual
             self.avancar()
@@ -452,13 +433,38 @@ class ParserCoral:
             token = self.token_atual
             self.avancar()
             
-            if self.verificar('('):
+            # Cria o identificador base
+            expressao = IdentificadorNode(token.lexema, token.linha, token.coluna)
+            
+            # Processa acessos encadeados: obj.attr1.attr2.metodo()
+            while self.token_atual and self.token_atual.lexema == '.':
+                self.avancar()  # Consome '.'
+                
+                atributo_token = self.consumir('ID', "Esperado nome do atributo após '.'")
+                atributo_nome = atributo_token.lexema
+                
+                # Verifica se é chamada de método: obj.metodo()
+                if self.verificar('('):
+                    self.avancar()
+                    argumentos = self.lista_argumentos()
+                    self.consumir(')', "Esperado ')' após argumentos do método")
+                    # Cria acesso ao atributo (método) e depois chamada
+                    from .ast_nodes import AcessoAtributoNode
+                    acesso = AcessoAtributoNode(expressao, atributo_nome, atributo_token.linha, atributo_token.coluna)
+                    expressao = ChamadaFuncaoNode(acesso, argumentos, atributo_token.linha, atributo_token.coluna)
+                else:
+                    # Apenas acesso ao atributo: obj.attr
+                    from .ast_nodes import AcessoAtributoNode
+                    expressao = AcessoAtributoNode(expressao, atributo_nome, atributo_token.linha, atributo_token.coluna)
+            
+            # Se não tinha '.', verifica se é chamada de função normal: func()
+            if isinstance(expressao, IdentificadorNode) and self.verificar('('):
                 self.avancar()
                 argumentos = self.lista_argumentos()
                 self.consumir(')', "Esperado ')' após argumentos da função")
-                return ChamadaFuncaoNode(token.lexema, argumentos, token.linha, token.coluna)
+                return ChamadaFuncaoNode(expressao.nome, argumentos, token.linha, token.coluna)
             
-            return IdentificadorNode(token.lexema, token.linha, token.coluna)
+            return expressao
         
         if self.verificar('('):
             self.avancar()
@@ -501,12 +507,7 @@ class ParserCoral:
         )
     
     def lista_argumentos(self):
-        """
-        Processa uma lista de argumentos separados por vírgula.
-        
-        Returns:
-            list: Lista de nós de expressão.
-        """
+        """Processa uma lista de argumentos separados por vírgula."""
         argumentos = []
         
         if self.token_atual and self.token_atual.lexema in [')', ']', '}']:
@@ -522,12 +523,7 @@ class ParserCoral:
         return argumentos
     
     def estrutura_se(self):
-        """
-        Processa uma estrutura condicional SE/SENAOSE/SENAO.
-        
-        Returns:
-            SeNode: Nó de estrutura condicional.
-        """
+        """Processa uma estrutura condicional SE/SENAOSE/SENAO."""
         token_se = self.consumir('SE')
         condicao = self.expressao()
         self.consumir(':', "Esperado ':' após condição do SE")
@@ -557,12 +553,7 @@ class ParserCoral:
         )
     
     def estrutura_enquanto(self):
-        """
-        Processa uma estrutura de repetição ENQUANTO.
-        
-        Returns:
-            EnquantoNode: Nó de loop ENQUANTO.
-        """
+        """Processa uma estrutura de repetição ENQUANTO."""
         token_enquanto = self.consumir('ENQUANTO')
         condicao = self.expressao()
         self.consumir(':', "Esperado ':' após condição do ENQUANTO")
@@ -571,12 +562,7 @@ class ParserCoral:
         return EnquantoNode(condicao, bloco, token_enquanto.linha, token_enquanto.coluna)
     
     def estrutura_para(self):
-        """
-        Processa uma estrutura de repetição PARA.
-        
-        Returns:
-            ParaNode: Nó de loop PARA.
-        """
+        """Processa uma estrutura de repetição PARA."""
         token_para = self.consumir('PARA')
         token_var = self.consumir('ID', "Esperado identificador após PARA")
         variavel = IdentificadorNode(token_var.lexema, token_var.linha, token_var.coluna)
@@ -589,12 +575,7 @@ class ParserCoral:
         return ParaNode(variavel, iteravel, bloco, token_para.linha, token_para.coluna)
     
     def funcao(self):
-        """
-        Processa uma declaração de função.
-        
-        Returns:
-            FuncaoNode: Nó de declaração de função.
-        """
+        """Processa uma declaração de função."""
         token_funcao = self.consumir('FUNCAO')
         token_nome = self.consumir('ID', "Esperado nome da função")
         nome = token_nome.lexema
@@ -602,19 +583,27 @@ class ParserCoral:
         self.consumir('(', "Esperado '(' após nome da função")
         parametros = self.lista_parametros()
         self.consumir(')', "Esperado ')' após parâmetros da função")
+        
+        # Suporte para anotação de tipo de retorno: -> TIPO
+        tipo_retorno = None
+        if self.token_atual and self.token_atual.lexema == '-':
+            proximo = self.tokens[self.posicao + 1] if self.posicao + 1 < len(self.tokens) else None
+            if proximo and proximo.lexema == '>':
+                # Consome '-' e '>'
+                self.avancar()  # '-'
+                self.avancar()  # '>'
+                # Consome o tipo
+                tipo_token = self.consumir('ID', "Esperado tipo de retorno após '->'")
+                tipo_retorno = tipo_token.lexema
+        
         self.consumir(':', "Esperado ':' após assinatura da função")
         
         bloco = self.bloco()
         
-        return FuncaoNode(nome, parametros, bloco, token_funcao.linha, token_funcao.coluna)
+        return FuncaoNode(nome, parametros, bloco, tipo_retorno, token_funcao.linha, token_funcao.coluna)
     
     def lista_parametros(self):
-        """
-        Processa uma lista de parâmetros de função.
-        
-        Returns:
-            list: Lista de nós de parâmetros.
-        """
+        """Processa uma lista de parâmetros de função."""
         parametros = []
         
         if self.verificar(')'):
@@ -628,29 +617,26 @@ class ParserCoral:
         return parametros
     
     def parametro(self):
-        """
-        Processa um parâmetro de função (com ou sem valor padrão).
-        
-        Returns:
-            ParametroNode: Nó de parâmetro.
-        """
+        """Processa um parâmetro de função (com ou sem valor padrão e anotação de tipo)."""
         token = self.consumir('ID', "Esperado nome do parâmetro")
         nome = token.lexema
+        
+        # Suporte para anotação de tipo: param: TIPO
+        tipo_anotacao = None
+        if self.verificar(':'):
+            self.avancar()  # Consome ':'
+            tipo_token = self.consumir('ID', "Esperado tipo após ':'")
+            tipo_anotacao = tipo_token.lexema
         
         valor_padrao = None
         if self.verificar('='):
             self.avancar()
             valor_padrao = self.expressao()
         
-        return ParametroNode(nome, valor_padrao, token.linha, token.coluna)
+        return ParametroNode(nome, tipo_anotacao, valor_padrao, token.linha, token.coluna)
     
     def classe(self):
-        """
-        Processa uma declaração de classe.
-        
-        Returns:
-            ClasseNode: Nó de declaração de classe.
-        """
+        """Processa uma declaração de classe."""
         token_classe = self.consumir('CLASSE')
         token_nome = self.consumir('ID', "Esperado nome da classe")
         nome = token_nome.lexema
@@ -661,12 +647,7 @@ class ParserCoral:
         return ClasseNode(nome, bloco, token_classe.linha, token_classe.coluna)
     
     def bloco(self):
-        """
-        Processa um bloco de código indentado.
-        
-        Returns:
-            BlocoNode: Nó de bloco com declarações.
-        """
+        """Processa um bloco de código indentado."""
         self.consumir('NEWLINE', "Esperado nova linha antes do bloco")
         self.consumir('INDENTA', "Esperado indentação para início do bloco")
         
@@ -685,12 +666,7 @@ class ParserCoral:
         return BlocoNode(declaracoes)
     
     def retornar(self):
-        """
-        Processa uma instrução de retorno.
-        
-        Returns:
-            RetornarNode: Nó de retorno.
-        """
+        """Processa uma instrução de retorno."""
         token = self.consumir('RETORNAR')
         
         expressao = None
@@ -715,14 +691,7 @@ class ParserCoral:
         return PassarNode(token.linha, token.coluna)
 
 def exibir_ast(no, indentacao=0, profundidade_maxima=10):
-    """
-    Exibe a AST de forma hierárquica e legível.
-    
-    Args:
-        no: Nó da AST
-        indentacao: Nível de indentação
-        profundidade_maxima: Profundidade máxima
-    """
+    """Exibe a AST de forma hierárquica e legível."""
     if indentacao > profundidade_maxima:
         print("  " * indentacao + "...")
         return

@@ -94,6 +94,48 @@ class InterpretadorCoral:
         self.ambiente_atual = self.ambiente_global
         self._registrar_funcoes_nativas()
     
+    def _mapa_tipos_python(self):
+        """Mapeia tipos Coral para tipos Python."""
+        return {
+            'INTEIRO': int,
+            'DECIMAL': float,
+            'TEXTO': str,
+            'BOOLEANO': bool,
+            'LISTA': list,
+            'DICIONARIO': dict
+        }
+    
+    def _validar_tipo(self, valor, tipo_esperado, nome_parametro, nome_funcao):
+        """Valida se o valor corresponde ao tipo esperado."""
+        if tipo_esperado is None:
+            return  # Sem anotação de tipo, aceita qualquer coisa
+        
+        mapa = self._mapa_tipos_python()
+        tipo_python = mapa.get(tipo_esperado)
+        
+        if tipo_python is None:
+            # Tipo desconhecido, ignora validação
+            return
+        
+        if not isinstance(valor, tipo_python):
+            tipo_recebido = type(valor).__name__
+            # Mapeia tipos Python de volta para nomes Coral
+            mapa_reverso = {
+                'int': 'INTEIRO',
+                'float': 'DECIMAL',
+                'str': 'TEXTO',
+                'bool': 'BOOLEANO',
+                'list': 'LISTA',
+                'dict': 'DICIONARIO'
+            }
+            tipo_recebido_coral = mapa_reverso.get(tipo_recebido, tipo_recebido)
+            
+            raise ErroExecucao(
+                f"Erro de tipo na função '{nome_funcao}': "
+                f"parâmetro '{nome_parametro}' espera {tipo_esperado}, "
+                f"mas recebeu {tipo_recebido_coral}"
+            )
+    
     def _registrar_funcoes_nativas(self):
         """Registra funções nativas (built-in) da linguagem."""
         # Função ESCREVA para imprimir na tela
@@ -119,15 +161,7 @@ class InterpretadorCoral:
             sys.exit(1)
     
     def visitar(self, no):
-        """
-        Visita um nó da AST e executa a ação apropriada.
-        
-        Args:
-            no: Nó da AST
-            
-        Returns:
-            Valor resultante da execução do nó
-        """
+        """Visita um nó da AST e executa a ação apropriada."""
         nome_metodo = f'visitar_{type(no).__name__}'
         metodo = getattr(self, nome_metodo, self.visitar_generico)
         return metodo(no)
@@ -152,32 +186,95 @@ class InterpretadorCoral:
         return valor
     
     def _processar_interpolacao(self, texto):
-        """Processa interpolação de variáveis em strings usando {variavel}."""
+        """Processa interpolação de variáveis/expressões em strings usando {expressao}."""
         import re
         
-        # Encontra todas as ocorrências de {variavel}
+        # Encontra todas as ocorrências de {expressao}
         def substituir(match):
-            nome_var = match.group(1)
+            expressao_str = match.group(1)
             try:
-                valor = self.ambiente_atual.obter_variavel(nome_var)
+                # Parse e avalia a expressão
+                from src.lexer.lexer import LexerCoral
+                from src.parser.parser import ParserCoral
+                
+                # Analisa a expressão
+                lexer = LexerCoral.analisar_string(expressao_str)
+                tokens = []
+                while True:
+                    token = lexer.getNextToken()
+                    tokens.append(token)
+                    if token.tipo == "EOF":
+                        break
+                
+                # Parse como expressão
+                parser = ParserCoral(tokens)
+                # Usa o método interno para parsear apenas uma expressão
+                expressao_node = parser.expressao()
+                
+                # Avalia a expressão
+                valor = self.visitar(expressao_node)
                 return str(valor)
-            except ErroExecucao:
-                # Se variável não existe, mantém o texto original
+            except:
+                # Se falhar, mantém o texto original
                 return match.group(0)
         
-        # Substitui {variavel} pelos valores
-        texto_interpolado = re.sub(r'\{([a-zA-Z_][a-zA-Z0-9_]*)\}', substituir, texto)
+        # Substitui {expressao} pelos valores (captura tudo entre { e })
+        texto_interpolado = re.sub(r'\{([^}]+)\}', substituir, texto)
         return texto_interpolado
     
     def visitar_IdentificadorNode(self, no):
         """Retorna o valor da variável."""
         return self.ambiente_atual.obter_variavel(no.nome)
     
+    def visitar_AcessoAtributoNode(self, no):
+        """Retorna o valor de um atributo de um objeto."""
+        objeto = self.visitar(no.objeto)
+        
+        # Se for instância de classe
+        if isinstance(objeto, InstanciaClasse):
+            return objeto.obter_atributo(no.atributo)
+        
+        # Tenta acessar atributo Python nativo (para compatibilidade)
+        try:
+            return getattr(objeto, no.atributo)
+        except AttributeError:
+            raise ErroExecucao(f"Objeto não possui atributo '{no.atributo}'")
+    
     def visitar_AtribuicaoNode(self, no):
-        """Executa uma atribuição de variável."""
-        nome = no.identificador.nome
+        """Executa uma atribuição de variável ou atributo."""
         valor = self.visitar(no.expressao)
         
+        # Se é atribuição a atributo: self.nome = valor
+        if isinstance(no.identificador, AcessoAtributoNode):
+            alvo = no.identificador
+            objeto = self.visitar(alvo.objeto)
+            
+            if isinstance(objeto, InstanciaClasse):
+                if no.operador == '=':
+                    objeto.definir_atributo(alvo.atributo, valor)
+                else:
+                    # Operadores compostos: +=, -=, etc
+                    valor_atual = objeto.obter_atributo(alvo.atributo)
+                    if no.operador == '+=':
+                        objeto.definir_atributo(alvo.atributo, valor_atual + valor)
+                    elif no.operador == '-=':
+                        objeto.definir_atributo(alvo.atributo, valor_atual - valor)
+                    elif no.operador == '*=':
+                        objeto.definir_atributo(alvo.atributo, valor_atual * valor)
+                    elif no.operador == '/=':
+                        objeto.definir_atributo(alvo.atributo, valor_atual / valor)
+                    elif no.operador == '%=':
+                        objeto.definir_atributo(alvo.atributo, valor_atual % valor)
+            else:
+                raise ErroExecucao(f"Não é possível atribuir atributo a este tipo de objeto")
+            return
+        
+        # Atribuição normal a variável
+        if isinstance(no.identificador, IdentificadorNode):
+            nome = no.identificador.nome
+        else:
+            nome = no.identificador
+            
         # Operadores de atribuição composta
         if no.operador == '=':
             self.ambiente_atual.definir_variavel(nome, valor)
@@ -255,16 +352,40 @@ class InterpretadorCoral:
             raise ErroExecucao(f"Operador unário '{operador}' não reconhecido", no.linha, no.coluna)
     
     def visitar_ChamadaFuncaoNode(self, no):
-        """Executa uma chamada de função."""
-        nome_funcao = no.nome
+        """Executa uma chamada de função ou método."""
+        from src.parser.ast_nodes import AcessoAtributoNode
         
         # Avalia os argumentos
         argumentos = [self.visitar(arg) for arg in no.argumentos]
         
-        # Busca a função
-        funcao = self.ambiente_atual.obter_funcao(nome_funcao)
+        # Se for chamada de método: obj.metodo()
+        if isinstance(no.nome, AcessoAtributoNode):
+            metodo = self.visitar(no.nome)
+            
+            # Se for método vinculado
+            if isinstance(metodo, MetodoVinculado):
+                return metodo(*argumentos)
+            
+            # Se for função/método callable
+            if callable(metodo):
+                return metodo(*argumentos)
+            
+            raise ErroExecucao(f"'{no.nome.atributo}' não é um método válido")
         
-        # Se for função nativa (Python)
+        # Chamada de função normal ou construtor de classe
+        nome_funcao = no.nome
+        
+        # Primeiro tenta buscar como função
+        try:
+            funcao = self.ambiente_atual.obter_funcao(nome_funcao)
+        except ErroExecucao:
+            # Se não encontrou como função, tenta como variável (pode ser classe)
+            try:
+                funcao = self.ambiente_atual.obter_variavel(nome_funcao)
+            except ErroExecucao:
+                raise ErroExecucao(f"'{nome_funcao}' não está definido", no.linha, no.coluna)
+        
+        # Se for função nativa (Python) ou classe
         if callable(funcao) and not isinstance(funcao, FuncaoNode):
             return funcao(*argumentos)
         
@@ -290,6 +411,13 @@ class InterpretadorCoral:
         # Vincula parâmetros aos argumentos
         for i, parametro in enumerate(funcao.parametros):
             if i < len(argumentos):
+                # VALIDAÇÃO DE TIPOS
+                self._validar_tipo(
+                    argumentos[i], 
+                    parametro.tipo_anotacao, 
+                    parametro.nome, 
+                    funcao.nome
+                )
                 ambiente_funcao.definir_variavel(parametro.nome, argumentos[i])
             elif parametro.valor_padrao is not None:
                 # Usa valor padrão
@@ -310,6 +438,15 @@ class InterpretadorCoral:
             retorno = e.valor
         finally:
             self.ambiente_atual = ambiente_anterior
+        
+        # VALIDAÇÃO DO TIPO DE RETORNO
+        if funcao.tipo_retorno is not None and retorno is not None:
+            self._validar_tipo(
+                retorno,
+                funcao.tipo_retorno,
+                'retorno',
+                funcao.nome
+            )
         
         return retorno
     
@@ -398,19 +535,112 @@ class InterpretadorCoral:
         return resultado
     
     def visitar_ClasseNode(self, no):
-        """Define uma classe (implementação básica)."""
-        # TODO: Implementar classes completas
-        raise ErroExecucao("Classes ainda não estão completamente implementadas", no.linha, no.coluna)
+        """Define uma classe."""
+        classe = ClasseCoral(no.nome, no.bloco, self)
+        self.ambiente_atual.definir_variavel(no.nome, classe)
+
+
+class ClasseCoral:
+    """Representa uma classe definida pelo usuário."""
+    
+    def __init__(self, nome, bloco, interpretador):
+        self.nome = nome
+        self.bloco = bloco
+        self.interpretador = interpretador
+        self.metodos = {}
+        self._extrair_metodos()
+    
+    def _extrair_metodos(self):
+        """Extrai métodos do bloco da classe."""
+        for declaracao in self.bloco.declaracoes:
+            if isinstance(declaracao, FuncaoNode):
+                self.metodos[declaracao.nome] = declaracao
+    
+    def __call__(self, *args, **kwargs):
+        """Permite instanciar a classe como: obj = MinhaClasse()"""
+        instancia = InstanciaClasse(self)
+        
+        # Chama __construtor__ se existir
+        if '__construtor__' in self.metodos:
+            construtor = self.metodos['__construtor__']
+            # Cria ambiente para o construtor
+            ambiente_construtor = Ambiente(self.interpretador.ambiente_global)
+            ambiente_construtor.definir_variavel('self', instancia)
+            
+            # Vincula parâmetros
+            for i, parametro in enumerate(construtor.parametros):
+                if i < len(args):
+                    ambiente_construtor.definir_variavel(parametro.nome, args[i])
+            
+            # Executa o corpo do construtor
+            ambiente_anterior = self.interpretador.ambiente_atual
+            self.interpretador.ambiente_atual = ambiente_construtor
+            try:
+                self.interpretador.visitar(construtor.bloco)
+            except RetornoExcecao:
+                pass  # Construtor não deve retornar valor
+            finally:
+                self.interpretador.ambiente_atual = ambiente_anterior
+        
+        return instancia
+
+
+class InstanciaClasse:
+    """Representa uma instância de uma classe."""
+    
+    def __init__(self, classe):
+        self.classe = classe
+        self.atributos = {}
+    
+    def obter_atributo(self, nome):
+        """Obtém um atributo ou método da instância."""
+        if nome in self.atributos:
+            return self.atributos[nome]
+        elif nome in self.classe.metodos:
+            # Retorna método vinculado à instância
+            return MetodoVinculado(self, self.classe.metodos[nome])
+        else:
+            raise ErroExecucao(f"Atributo '{nome}' não encontrado")
+    
+    def definir_atributo(self, nome, valor):
+        """Define um atributo da instância."""
+        self.atributos[nome] = valor
+
+
+class MetodoVinculado:
+    """Representa um método vinculado a uma instância."""
+    
+    def __init__(self, instancia, metodo):
+        self.instancia = instancia
+        self.metodo = metodo
+    
+    def __call__(self, *args):
+        """Executa o método com 'self' automaticamente vinculado."""
+        interpretador = self.instancia.classe.interpretador
+        ambiente_metodo = Ambiente(interpretador.ambiente_global)
+        ambiente_metodo.definir_variavel('self', self.instancia)
+        
+        # Vincula parâmetros
+        for i, parametro in enumerate(self.metodo.parametros):
+            if i < len(args):
+                ambiente_metodo.definir_variavel(parametro.nome, args[i])
+        
+        # Executa o método
+        ambiente_anterior = interpretador.ambiente_atual
+        interpretador.ambiente_atual = ambiente_metodo
+        try:
+            interpretador.visitar(self.metodo.bloco)
+            retorno = None
+        except RetornoExcecao as e:
+            retorno = e.valor
+        finally:
+            interpretador.ambiente_atual = ambiente_anterior
+        
+        return retorno
 
 
 def executar_programa(ast, exibir_mensagem=True):
-    """
-    Executa um programa Coral a partir da AST.
-    
-    Args:
-        ast: ProgramaNode - raiz da AST
-        exibir_mensagem: Se deve exibir mensagem de conclusão
-    """
+    """Executa um programa Coral a partir da AST."""
     if exibir_mensagem:
         print(f"{'='*70}")
         print(f"Executando Programa Coral")
