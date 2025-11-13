@@ -160,6 +160,17 @@ class CoralInterpreter:
                 return False
 
 
+def exibir_logo():
+    logo = r"""
+   ______                 __
+  / ____/___  _________ _/ /
+ / /   / __ \/ ___/ __ `/ / 
+/ /___/ /_/ / /  / /_/ / /  
+\____/\____/_/   \__,_/_/   
+                             
+    """
+    print(logo)
+
 def main():
     """Função principal do interpretador."""
     parser = argparse.ArgumentParser(
@@ -173,6 +184,7 @@ Exemplos de uso:
   coral --parse programa.crl      # Apenas análise sintática
   coral --ast programa.crl        # Exibe a AST
   coral --cat programa.crl        # Exibe o conteúdo do arquivo
+  coral --logo                    # Exibe o logo do Coral
   coral --version                 # Exibe a versão
   
 Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
@@ -210,12 +222,22 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
     )
     
     parser.add_argument(
+        '--logo',
+        action='store_true',
+        help='Exibir o logo do Coral'
+    )
+    
+    parser.add_argument(
         '--version', '-v',
         action='version',
         version=f'Coral v{__version__}'
     )
     
     args = parser.parse_args()
+    
+    if args.logo:
+        exibir_logo()
+        sys.exit(0)
     
     # Verifica se arquivo foi fornecido
     if not args.arquivo:
@@ -246,7 +268,6 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
     sucesso = interpretador.executar(modo)
     
     sys.exit(0 if sucesso else 1)
-
 
 if __name__ == "__main__":
     main()
