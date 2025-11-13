@@ -4,7 +4,6 @@ CLASSE Pessoa:
     FUNCAO __construtor__(nome: TEXTO, idade: INTEIRO):
         self.nome = nome
         self.idade = idade
-        self.ativo = VERDADE
     
     FUNCAO apresentar():
         ESCREVA(f"Olá, meu nome é {self.nome}")
