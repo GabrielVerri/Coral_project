@@ -1,139 +1,68 @@
 # Coral Language 🐍
 
-Linguagem de programação desenvolvida para a disciplina de Compiladores e Linguagens Formais.
+Linguagem de programação interpretada com sintaxe em português, desenvolvida para a disciplina de Compiladores e Linguagens Formais.
 
-## Como Usar
-
-### Windows - Início Rápido
-
-**Opção 1: Configurar ambiente (recomendado)**
-```powershell
-# Configure o ambiente Coral para a sessão atual do terminal
-.\setup_env.bat
-
-# Agora pode usar o comando 'coral' diretamente
-coral teste.crl
-coral --cat teste.crl
-coral --help
-```
-
-**Opção 2: Executar diretamente (sem configurar)**
-```powershell
-# Usando Python
-python coral.py teste.crl
-
-# Usando o script
-.\scripts\coral.bat teste.crl
-```
-
-**Opção 3: Instalação permanente**
-```powershell
-# Adiciona ao PATH do sistema (requer reabrir terminal)
-.\scripts\instalar.bat
-
-# Depois de reabrir o terminal:
-coral teste.crl
-```
-
-### Linux/Mac
+## 🚀 Instalação e Uso
 
 ```bash
-# Instalação
-chmod +x scripts/instalar.sh
-./scripts/instalar.sh
-
-# Uso
-coral programa.crl
+git clone https://github.com/GabrielVerri/Coral_project.git
+cd Coral_project
+python coral.py arquivo.crl
 ```
 
-**Guias:** [Linux/Mac](docs/guias/LINUX.md) | [Instalação](docs/guias/INSTALL.md)
+> **Nota:** Use `python coral.py` para executar em qualquer máquina sem configuração.  
+> Opcionalmente, você pode instalar o comando `coral` (ver [INSTALL.md](docs/guias/INSTALL.md)).
 
-### Opções de Linha de Comando
+**Guias:** [INSTALL.md](docs/guias/INSTALL.md) | [Linux/Mac](docs/guias/LINUX.md)
+
+## Comandos
 
 ```bash
-# Executar programa (mostra apenas o output)
-coral programa.crl
-
-# Exibir código fonte do arquivo
-coral --cat programa.crl
-
-# Apenas análise léxica
-coral --lex programa.crl
-
-# Apenas análise sintática
-coral --parse programa.crl
-
-# Exibir AST (Árvore Sintática Abstrata)
-coral --ast programa.crl
-
-# Exibir versão
-coral --version
-
-# Exibir ajuda
-coral --help
+python coral.py programa.crl          # Executar
+python coral.py --lex programa.crl    # Ver tokens
+python coral.py --parse programa.crl  # Ver AST
+python coral.py --help                # Ajuda
 ```
 
 ## Estrutura do Projeto
 
 ```
 Coral_project/
-├── coral.py              # Executável principal do interpretador
-├── coral.spec            # Configuração PyInstaller
-├── setup_env.bat         # Configuração rápida de ambiente (Windows)
+├── coral.py                      # Interpretador principal
+├── install.bat / install.sh      # Instaladores
 ├── src/
-│   ├── lexer/           # Analisador léxico (tokenização)
-│   ├── parser/          # Analisador sintático (AST)
-│   ├── interpreter/     # Interpretador (execução)
-│   └── utils/           # Utilitários compartilhados
-├── scripts/
-│   ├── coral.bat        # Script executável Windows
-│   ├── coral            # Script executável Linux/Mac
-│   ├── instalar.bat     # Instalador permanente Windows
-│   ├── instalar.sh      # Instalador Linux/Mac
-│   ├── build_executable.sh   # Build executável Linux/Mac
-│   └── build_executable.bat  # Build executável Windows
+│   ├── lexer/                   # Análise léxica (AFN→AFD)
+│   ├── parser/                  # Análise sintática (LL1)
+│   ├── interpreter/             # Execução do código
+│   └── utils/                   # Palavras reservadas e tipos
 ├── exemplos/
-│   ├── lexer/           # Exemplos para análise léxica
-│   └── parser/          # Exemplos para análise sintática e execução
-├── test/                # Testes unitários
-└── docs/                # Documentação completa
-```
-
-## Testando
-
-Execute os exemplos incluídos:
-
-```powershell
-# Primeiro configure o ambiente (Windows)
-.\setup_env.bat
-
-# Executar programas (mostra apenas o output)
-coral exemplos\parser\ola_mundo.crl
-coral exemplos\parser\funcoes.crl
-coral exemplos\parser\lacos.crl
-coral exemplos\parser\expressoes_aritmeticas.crl
-
-# Ver o código fonte
-coral --cat exemplos\parser\ola_mundo.crl
-
-# Ver a AST (árvore sintática)
-coral --ast exemplos\parser\expressoes_aritmeticas.crl
-
-# Apenas análise léxica
-coral --lex exemplos\lexer\ola_mundo_correto.crl
+│   ├── lexer/                   # Exemplos de análise léxica
+│   └── parser/                  # Programas completos
+├── test/                        # Testes unitários
+├── docs/
+│   ├── especificacao_linguagem/ # Gramática e sintaxe
+│   ├── diagramas/               # AFD/AFN
+│   └── guias/                   # Guias de instalação
+└── scripts/                     # Scripts executáveis
 ```
 
 ## Documentação
 
-### Guias de Uso
-- [Guia Linux/Mac](docs/guias/LINUX.md) - Como instalar e usar no Linux
-- [Guia de Instalação](docs/guias/INSTALL.md) - Instalação detalhada
+- **[INSTALL.md](docs/guias/INSTALL.md)** - Instalação e primeiros passos
+- **[Especificação](docs/especificacao_linguagem/)** - Gramática e sintaxe
+- **[Lexer](src/lexer/README.md)** - Analisador léxico
+- **[Parser](src/parser/README.md)** - Analisador sintático
+- **[Diagramas AFD/AFN](docs/diagramas/)** - Autômatos
 
-### Documentação Técnica
-- [Analisador Léxico](src/lexer/README.md) - Como funciona o lexer
-- [Analisador Sintático](src/parser/README.md) - Como funciona o parser
-- [Especificação da Linguagem](docs/especificacao_linguagem/) - Gramática e regras
-- [Diagramas](docs/diagramas/) - Diagramas AFD/AFN
+## Exemplos
+
+```bash
+python coral.py exemplos/parser/ola_mundo.crl
+python coral.py exemplos/parser/teste_classe_self.crl
+python coral.py exemplos/parser/teste_validacao_tipos.crl
+```
+
+Veja mais em [`exemplos/`](exemplos/).
 
 ## Desenvolvimento
 
