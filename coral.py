@@ -121,23 +121,36 @@ class CoralInterpreter:
             return self.analise_lexica()
         
         elif modo == 'parse':
-            return self.analise_sintatica()
-        
-        elif modo == 'ast':
-            # Modo especial: mostra a AST sem executar
-            print(f"\n{'='*70}")
-            print(f"Coral Language 🐍 Interpreter")
-            print(f"{'='*70}\n")
-            
+            # Análise sintática: apenas valida a sintaxe
             if not self.analise_lexica(exibir=False):
                 return False
             
-            if not self.analise_sintatica(exibir=True):
+            if not self.analise_sintatica(exibir=False):
                 return False
             
+            print(f"\n{'='*70}")
+            print(f"✓ Sintaxe válida - {self.arquivo}")
             print(f"{'='*70}")
-            print(f"AST gerada com sucesso!")
+            print(f"\nO programa está sintaticamente correto!")
+            print(f"Use --ast para ver a árvore sintática.\n")
+            
+            return True
+        
+        elif modo == 'ast':
+            # Exibe a árvore sintática abstrata
+            if not self.analise_lexica(exibir=False):
+                return False
+            
+            if not self.analise_sintatica(exibir=False):
+                return False
+            
+            # Exibe a AST
+            from src.parser.parser import exibir_ast
+            print(f"\n{'='*70}")
+            print(f"Árvore Sintática Abstrata (AST) - {self.arquivo}")
             print(f"{'='*70}\n")
+            exibir_ast(self.ast)
+            print()
             
             return True
         
@@ -181,7 +194,7 @@ def main():
 Exemplos de uso:
   coral programa.crl              # Executa o programa
   coral --lex programa.crl        # Apenas análise léxica
-  coral --parse programa.crl      # Apenas análise sintática
+  coral --parse programa.crl      # Valida sintaxe
   coral --ast programa.crl        # Exibe a AST
   coral --cat programa.crl        # Exibe o conteúdo do arquivo
   coral --logo                    # Exibe o logo do Coral
@@ -206,7 +219,7 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
     parser.add_argument(
         '--parse',
         action='store_true',
-        help='Executar apenas análise sintática'
+        help='Validar sintaxe do programa'
     )
     
     parser.add_argument(

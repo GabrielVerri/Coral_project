@@ -251,6 +251,29 @@ class ParserCoral:
         
         expressao = self.expressao()
         
+        # Valida se não há tokens inesperados após a expressão (antes do newline/EOF)
+        if self.token_atual and not self.verificar('NEWLINE') and not self.fim_arquivo():
+            # Se o próximo token é um ID, provavelmente esqueceu aspas
+            if self.verificar('ID'):
+                # Coleta todos os IDs seguidos para mostrar na mensagem
+                ids_errados = [expressao.nome if hasattr(expressao, 'nome') else str(expressao)]
+                while self.verificar('ID'):
+                    ids_errados.append(self.token_atual.lexema)
+                    self.avancar()
+                
+                texto_completo = ' '.join(ids_errados)
+                raise ErroSintatico(
+                    f"String sem aspas: '{texto_completo}'. Use aspas para texto: \"{texto_completo}\"",
+                    identificador_token.linha,
+                    identificador_token.coluna
+                )
+            else:
+                raise ErroSintatico(
+                    f"Token inesperado após expressão: '{self.token_atual.lexema}'",
+                    self.token_atual.linha,
+                    self.token_atual.coluna
+                )
+        
         return AtribuicaoNode(
             alvo,
             operador.lexema,
