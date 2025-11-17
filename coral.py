@@ -97,7 +97,7 @@ class CoralInterpreter:
                 print(f"Análise Sintática - Arquivo: {self.arquivo}")
                 print(f"{'='*70}\n")
             if exibir:
-                print(f"\nAnálise sintática concluída com sucesso!\n")
+                print(f"Análise sintática concluída com sucesso!\n")
             
             return True
             
@@ -132,19 +132,18 @@ class CoralInterpreter:
         
         elif modo == 'ast':
             # Modo especial: mostra a AST sem executar
-            print(f"\n{'='*70}")
-            print(f"Coral Language 🐍 Interpreter")
-            print(f"{'='*70}\n")
-            
             if not self.analise_lexica(exibir=False):
                 return False
             
-            if not self.analise_sintatica(exibir=True):
+            if not self.analise_sintatica(exibir=False):
                 return False
             
             print(f"{'='*70}")
-            print(f"AST gerada com sucesso!")
+            print(f"AST - {self.arquivo}")
             print(f"{'='*70}\n")
+            
+            # Exibe a AST
+            exibir_ast(self.ast)
             
             return True
         
