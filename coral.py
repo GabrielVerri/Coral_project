@@ -17,12 +17,12 @@ import sys
 import os
 import argparse
 
-# Adiciona o diretório raiz ao path
-sys.path.insert(0, os.path.dirname(__file__))
+# Adiciona o diretório src ao path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from src.lexer.lexer import LexerCoral
-from src.parser.parser import ParserCoral, exibir_ast, ErroSintatico
-from src.interpreter.interpreter import executar_programa
+from lexer.lexer import LexerCoral
+from parser.parser import ParserCoral, exibir_ast, ErroSintatico
+from interpreter.interpreter import executar_programa
 
 __version__ = "0.1.0"
 __author__ = "Coral Language Team"
@@ -109,7 +109,14 @@ class CoralInterpreter:
             return False
     
     def executar(self, modo='completo'):
-        """Executa o interpretador no modo especificado."""
+        """
+        Executa o interpretador no modo especificado.
+        
+        Args:
+            modo: 'lex' (apenas léxico), 'parse' (apenas sintático), 
+                  'completo' (análise completa + execução), 'ast' (mostra AST),
+                  'cat' (exibe conteúdo do arquivo)
+        """
         self.carregar_arquivo()
         
         if modo == 'cat':
@@ -151,16 +158,8 @@ class CoralInterpreter:
             
             # Executa o programa (apenas output, sem mensagens)
             try:
-                from src.interpreter.interpreter import InterpretadorCoral
-                interpretador = InterpretadorCoral()
-                interpretador.interpretar(self.ast)
-                return True
-            except Exception as e:
-                print(f"Erro durante execução: {e}")
-                return False
-
-
-def exibir_logo():
+                from interpreter.interpreter import InterpretadorCoral
+      def exibir_logo():
     logo = r"""
    ______                 __
   / ____/___  _________ _/ /
@@ -268,6 +267,17 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
     sucesso = interpretador.executar(modo)
     
     sys.exit(0 if sucesso else 1)
+  elif args.cat:
+        modo = 'cat'
+    else:
+        modo = 'completo'
+    
+    # Executa o interpretador
+    interpretador = CoralInterpreter(args.arquivo)
+    sucesso = interpretador.executar(modo)
+    
+    sys.exit(0 if sucesso else 1)
+
 
 if __name__ == "__main__":
     main()

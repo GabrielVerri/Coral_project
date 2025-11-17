@@ -1,46 +1,65 @@
 #!/bin/bash
-# Instalador do Coral Language para Linux/Mac
-# Adiciona o comando 'coral' ao PATH do sistema
+# Instalador do Coral Language para Linux/macOS
+# Execute: curl -fsSL https://raw.githubusercontent.com/GabrielVerri/Coral_project/dev/install.sh | bash
 
-echo "========================================"
-echo "  Instalador Coral Language"
-echo "========================================"
-echo
+set -e
 
-# Obtém o diretório do projeto
-CORAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CORAL_SCRIPTS="$CORAL_DIR/scripts"
+echo ""
+echo "=== Coral Language - Instalador ==="
+echo ""
 
-echo "Diretório do Coral: $CORAL_DIR"
-echo "Diretório scripts: $CORAL_SCRIPTS"
-echo
+# Configurações
+REPO="https://github.com/GabrielVerri/Coral_project/archive/refs/heads/dev.zip"
+ZIP="/tmp/coral.zip"
+DIR="$HOME/CoralLanguage"
+TMP="/tmp/Coral_project-dev"
 
-# Verifica se o script coral existe
-if [ ! -f "$CORAL_SCRIPTS/coral" ]; then
-    echo "ERRO: Arquivo coral não encontrado em scripts/"
-    echo
+# Detectar SO
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    OS="Linux"
+    UNZIP_CMD="unzip"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    OS="macOS"
+    UNZIP_CMD="unzip"
+else
+    echo "Sistema operacional não suportado: $OSTYPE"
     exit 1
 fi
 
-# Torna o script executável
-chmod +x "$CORAL_SCRIPTS/coral"
+echo "Sistema detectado: $OS"
 
-echo "Deseja adicionar o Coral ao PATH? (s/n)"
-read -r RESPOSTA
-
-if [ "$RESPOSTA" != "s" ] && [ "$RESPOSTA" != "S" ]; then
-    echo "Instalação cancelada."
-    echo
-    echo "Você pode executar Coral usando:"
-    echo "  python3 coral.py arquivo.crl"
-    echo
-    exit 0
+# Verificar dependências
+if ! command -v curl &> /dev/null; then
+    echo "ERRO: curl não encontrado. Instale com:"
+    echo "  sudo apt install curl  # Ubuntu/Debian"
+    echo "  sudo yum install curl  # CentOS/RHEL"
+    echo "  brew install curl      # macOS"
+    exit 1
 fi
 
-echo
-echo "Adicionando ao PATH..."
+if ! command -v unzip &> /dev/null; then
+    echo "ERRO: unzip não encontrado. Instale com:"
+    echo "  sudo apt install unzip  # Ubuntu/Debian"
+    echo "  sudo yum install unzip  # CentOS/RHEL"
+    echo "  brew install unzip      # macOS"
+    exit 1
+fi
+
+echo "Baixando..."
+curl -fsSL "$REPO" -o "$ZIP"
+
+echo "Instalando..."
+[ -d "$DIR" ] && rm -rf "$DIR"
+[ -d "$TMP" ] && rm -rf "$TMP"
+unzip -q "$ZIP" -d /tmp
+mv "$TMP" "$DIR"
+rm -f "$ZIP"
+
+echo "Configurando PATH..."
+SCRIPTS_DIR="$DIR/scripts"
 
 # Detecta o shell
+SHELL_RC=""
 if [ -n "$BASH_VERSION" ]; then
     SHELL_RC="$HOME/.bashrc"
 elif [ -n "$ZSH_VERSION" ]; then
@@ -50,25 +69,23 @@ else
 fi
 
 # Verifica se já está no PATH
-if grep -q "CORAL_PROJECT" "$SHELL_RC" 2>/dev/null; then
-    echo "Coral já está configurado em $SHELL_RC"
-else
-    echo >> "$SHELL_RC"
-    echo "# Coral Programming Language" >> "$SHELL_RC"
-    echo "export PATH=\"\$PATH:$CORAL_SCRIPTS\" # CORAL_PROJECT" >> "$SHELL_RC"
-    echo "Adicionado ao $SHELL_RC"
+if ! grep -q "CoralLanguage/scripts" "$SHELL_RC" 2>/dev/null; then
+    echo "" >> "$SHELL_RC"
+    echo "# Coral Language" >> "$SHELL_RC"
+    echo "export PATH=\"\$PATH:$SCRIPTS_DIR\"" >> "$SHELL_RC"
 fi
 
-echo
-echo "========================================"
-echo "  Coral instalado com sucesso!"
-echo "========================================"
-echo
-echo "IMPORTANTE: Execute o comando abaixo ou reabra o terminal:"
+# Tornar scripts executáveis
+chmod +x "$SCRIPTS_DIR/coral"
+chmod +x "$SCRIPTS_DIR/coral.sh" 2>/dev/null || true
+
+echo ""
+echo "=== Instalado com sucesso! ==="
+echo "Localização: $DIR"
+echo ""
+echo "Recarregue o terminal ou execute:"
 echo "  source $SHELL_RC"
-echo
-echo "Uso:"
+echo ""
+echo "Depois use:"
 echo "  coral arquivo.crl"
-echo "  coral --lex arquivo.crl"
-echo "  coral --parse arquivo.crl"
-echo
+echo ""
