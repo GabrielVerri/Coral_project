@@ -31,4 +31,3 @@ if ($path -notlike "*$scripts*") {
 Write-Host "`n=== Instalado com sucesso! ===" -ForegroundColor Green
 Write-Host "Localização: $dir" -ForegroundColor Cyan
 Write-Host "`nFeche e reabra o terminal, depois use:" -ForegroundColor Yellow
-Write-Host "  coral arquivo.crl`n" -ForegroundColor White

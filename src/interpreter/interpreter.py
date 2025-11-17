@@ -146,6 +146,15 @@ class InterpretadorCoral:
         self.ambiente_global.definir_funcao('TIPO', lambda x: type(x).__name__)
         # Função TAMANHO para obter tamanho de lista/string
         self.ambiente_global.definir_funcao('TAMANHO', lambda x: len(x))
+        # Função INTERVALO para gerar sequências numéricas (equivalente a range do Python)
+        def intervalo(inicio, fim=None, passo=1):
+            if fim is None:
+                # INTERVALO(n) -> 0 até n-1
+                return list(range(inicio))
+            else:
+                # INTERVALO(inicio, fim, passo) -> inicio até fim-1 com passo
+                return list(range(inicio, fim, passo))
+        self.ambiente_global.definir_funcao('INTERVALO', intervalo)
     
     def interpretar(self, ast):
         """
