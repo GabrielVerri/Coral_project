@@ -1,5 +1,5 @@
 # Instalador One-Line do Coral Language
-# Execute no PowerShell: irm https://raw.githubusercontent.com/GabrielVerri/Coral_project/dev/quick_install.ps1 | iex
+# Execute no PowerShell: irm https://raw.githubusercontent.com/GabrielVerri/Coral_project/main/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
