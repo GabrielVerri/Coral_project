@@ -160,7 +160,7 @@ class CoralInterpreter:
             try:
                 from interpreter.interpreter import InterpretadorCoral
                 interpretador = InterpretadorCoral()
-                interpretador.executar_programa(self.ast)
+                interpretador.interpretar(self.ast)
                 return True
             except Exception as e:
                 print(f"Erro durante execução: {e}", file=sys.stderr)
