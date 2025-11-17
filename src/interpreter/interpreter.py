@@ -155,6 +155,29 @@ class InterpretadorCoral:
                 # INTERVALO(inicio, fim, passo) -> inicio até fim-1 com passo
                 return list(range(inicio, fim, passo))
         self.ambiente_global.definir_funcao('INTERVALO', intervalo)
+        
+        # Funções de conversão de tipo
+        def converter_inteiro(valor):
+            """Converte texto ou número para inteiro"""
+            try:
+                return int(valor)
+            except (ValueError, TypeError):
+                raise ErroExecucao(f"Não foi possível converter '{valor}' para INTEIRO")
+        
+        def converter_decimal(valor):
+            """Converte texto ou número para decimal (float)"""
+            try:
+                return float(valor)
+            except (ValueError, TypeError):
+                raise ErroExecucao(f"Não foi possível converter '{valor}' para DECIMAL")
+        
+        def converter_texto(valor):
+            """Converte qualquer valor para texto"""
+            return str(valor)
+        
+        self.ambiente_global.definir_funcao('INTEIRO', converter_inteiro)
+        self.ambiente_global.definir_funcao('DECIMAL', converter_decimal)
+        self.ambiente_global.definir_funcao('TEXTO', converter_texto)
     
     def interpretar(self, ast):
         """
