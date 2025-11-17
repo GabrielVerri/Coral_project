@@ -8,7 +8,7 @@ Esta pasta contém scripts auxiliares para instalação e build do projeto.
 
 - **`coral`** - Script shell para executar Coral no Linux/Mac
 - **`coral.bat`** - Script batch para executar Coral no Windows
-- **`instalar.sh`** - Script de instalação automática para Linux/Mac
+- **`../install.sh`** - Script de instalação automática para Linux/Mac (na raiz do projeto)
 
 ### Build de Executável
 
@@ -22,8 +22,8 @@ Esta pasta contém scripts auxiliares para instalação e build do projeto.
 ```bash
 # Instalar (adiciona 'coral' ao PATH)
 cd Coral_project
-chmod +x scripts/instalar.sh
-./scripts/instalar.sh
+chmod +x install.sh
+./install.sh
 
 # Depois pode usar de qualquer lugar:
 coral meu_programa.crl
