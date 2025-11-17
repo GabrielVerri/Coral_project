@@ -159,7 +159,14 @@ class CoralInterpreter:
             # Executa o programa (apenas output, sem mensagens)
             try:
                 from interpreter.interpreter import InterpretadorCoral
-      def exibir_logo():
+                interpretador = InterpretadorCoral()
+                interpretador.executar_programa(self.ast)
+                return True
+            except Exception as e:
+                print(f"Erro durante execução: {e}", file=sys.stderr)
+                return False
+
+def exibir_logo():
     logo = r"""
    ______                 __
   / ____/___  _________ _/ /
@@ -258,16 +265,6 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
     elif args.ast:
         modo = 'ast'
     elif args.cat:
-        modo = 'cat'
-    else:
-        modo = 'completo'
-    
-    # Executa o interpretador
-    interpretador = CoralInterpreter(args.arquivo)
-    sucesso = interpretador.executar(modo)
-    
-    sys.exit(0 if sucesso else 1)
-  elif args.cat:
         modo = 'cat'
     else:
         modo = 'completo'
