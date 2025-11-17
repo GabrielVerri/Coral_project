@@ -13,10 +13,10 @@ cd Coral_project
 
 **Por padrão, use sempre:**
 ```bash
-python coral.py arquivo.crl
-python coral.py --lex arquivo.crl    # tokens
-python coral.py --parse arquivo.crl  # AST
-python coral.py --version            # versão
+coral arquivo.crl
+coral --lex arquivo.crl    # tokens
+coral --parse arquivo.crl  # AST
+coral --version            # versão
 ```
 Funciona em qualquer máquina sem configuração adicional.
 
