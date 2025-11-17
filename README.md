@@ -48,7 +48,8 @@ execução com Python, consulte o guia:
 ```
 Coral_project/
 ├── coral.py                      # Interpretador principal
-├── install.bat / install.sh      # Instaladores
+├── install.ps1 / install.sh      # Instaladores
+├── install.bat                   # Launcher para CMD (Windows)
 ├── src/
 │   ├── lexer/                   # Análise léxica (AFN→AFD)
 │   ├── parser/                  # Análise sintática (LL1)
