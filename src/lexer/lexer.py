@@ -7,7 +7,7 @@ sys.path.insert(0, src_dir)
 from lexer.AFD import get_afd
 from lexer.Token import Token
 from lexer.Buffer import BufferLeitura
-from utils import PALAVRAS_RESERVADAS
+from utils.utils import PALAVRAS_RESERVADAS
 
 class AnalisadorLexico:
     """Analisador léxico/Tokenizador para a linguagem Coral com suporte a INDENTA/DEDENTA."""

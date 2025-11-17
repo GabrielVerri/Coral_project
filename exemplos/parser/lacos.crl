@@ -4,6 +4,7 @@
 contador = 0
 ENQUANTO contador < 5:
     contador = contador + 1
+    ESCREVA(contador)
 
 soma = 0
 PARA i DENTRODE [1, 2, 3, 4, 5]:
@@ -13,3 +14,8 @@ PARA numero DENTRODE [10, 20, 30]:
     SE numero > 15:
         CONTINUA
     resultado = numero * 2
+
+# Usando INTERVALO para gerar sequência numérica (equivalente a range do Python)
+ESCREVA("Contando com INTERVALO:")
+PARA i DENTRODE INTERVALO(1, 10):
+    ESCREVA(i)

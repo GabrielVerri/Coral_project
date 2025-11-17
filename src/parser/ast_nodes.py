@@ -60,13 +60,15 @@ class ExpressaoUnariaNode(ExpressaoNode):
 
 class LiteralNode(ExpressaoNode):
     """Literal (número, string, booleano)."""
-    def __init__(self, valor, tipo, linha=None, coluna=None):
+    def __init__(self, valor, tipo, linha=None, coluna=None, formatada=False):
         super().__init__(linha, coluna)
         self.valor = valor
         self.tipo = tipo
+        self.formatada = formatada  # True se for f"string"
     
     def __repr__(self):
-        return f"Literal({self.valor}:{self.tipo})"
+        prefixo = "f" if self.formatada else ""
+        return f"Literal({prefixo}{self.valor}:{self.tipo})"
 
 
 class IdentificadorNode(ExpressaoNode):
@@ -77,6 +79,17 @@ class IdentificadorNode(ExpressaoNode):
     
     def __repr__(self):
         return f"Id({self.nome})"
+
+
+class AcessoAtributoNode(ExpressaoNode):
+    """Acesso a atributo (ex: objeto.atributo)."""
+    def __init__(self, objeto, atributo, linha=None, coluna=None):
+        super().__init__(linha, coluna)
+        self.objeto = objeto  # ExpressaoNode (geralmente IdentificadorNode)
+        self.atributo = atributo  # String (nome do atributo)
+    
+    def __repr__(self):
+        return f"Acesso({self.objeto}.{self.atributo})"
 
 
 class AtribuicaoNode(DeclaracaoNode):
@@ -139,25 +152,29 @@ class BlocoNode(ASTNode):
 
 class FuncaoNode(DeclaracaoNode):
     """Definição de função."""
-    def __init__(self, nome, parametros, bloco, linha=None, coluna=None):
+    def __init__(self, nome, parametros, bloco, tipo_retorno=None, linha=None, coluna=None):
         super().__init__(linha, coluna)
         self.nome = nome
         self.parametros = parametros
         self.bloco = bloco
+        self.tipo_retorno = tipo_retorno  # Anotação de tipo de retorno (opcional)
     
     def __repr__(self):
-        return f"Funcao({self.nome}, {len(self.parametros)} params)"
+        tipo_str = f" -> {self.tipo_retorno}" if self.tipo_retorno else ""
+        return f"Funcao({self.nome}, {len(self.parametros)} params{tipo_str})"
 
 
 class ParametroNode(ASTNode):
     """Parâmetro de função."""
-    def __init__(self, nome, valor_padrao=None, linha=None, coluna=None):
+    def __init__(self, nome, tipo_anotacao=None, valor_padrao=None, linha=None, coluna=None):
         super().__init__(linha, coluna)
         self.nome = nome
+        self.tipo_anotacao = tipo_anotacao  # Anotação de tipo (opcional)
         self.valor_padrao = valor_padrao
     
     def __repr__(self):
-        return f"Param({self.nome})"
+        tipo_str = f": {self.tipo_anotacao}" if self.tipo_anotacao else ""
+        return f"Param({self.nome}{tipo_str})"
 
 
 class ChamadaFuncaoNode(ExpressaoNode):

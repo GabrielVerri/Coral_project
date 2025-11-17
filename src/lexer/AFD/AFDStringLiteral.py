@@ -28,27 +28,32 @@ class AFDStringLiteral:
         if not entrada:
             return None
 
+        # Verifica se começa com 'f' (f-string)
+        prefixo_f = entrada.startswith('f')
+        inicio = 1 if prefixo_f else 0
+        entrada_sem_prefixo = entrada[inicio:]
+
         # String tripla com aspas duplas
-        if entrada.startswith('"""'):
-            pos = self.find_string_end(entrada, 3, '"""', multiline=True)
+        if entrada_sem_prefixo.startswith('"""'):
+            pos = self.find_string_end(entrada, inicio + 3, '"""', multiline=True)
             if pos >= 0:
                 return (entrada[:pos+3], pos+3, 'STRING_MULTILINE')
 
         # String tripla com aspas simples
-        elif entrada.startswith("'''"):
-            pos = self.find_string_end(entrada, 3, "'''", multiline=True)
+        elif entrada_sem_prefixo.startswith("'''"):
+            pos = self.find_string_end(entrada, inicio + 3, "'''", multiline=True)
             if pos >= 0:
                 return (entrada[:pos+3], pos+3, 'STRING_MULTILINE')
 
         # String normal com aspas duplas
-        elif entrada.startswith('"'):
-            pos = self.find_string_end(entrada, 1, '"', multiline=False)
+        elif entrada_sem_prefixo.startswith('"'):
+            pos = self.find_string_end(entrada, inicio + 1, '"', multiline=False)
             if pos >= 0:
                 return (entrada[:pos+1], pos+1, 'STRING')
 
         # String normal com aspas simples
-        elif entrada.startswith("'"):
-            pos = self.find_string_end(entrada, 1, "'", multiline=False)
+        elif entrada_sem_prefixo.startswith("'"):
+            pos = self.find_string_end(entrada, inicio + 1, "'", multiline=False)
             if pos >= 0:
                 return (entrada[:pos+1], pos+1, 'STRING')
 

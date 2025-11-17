@@ -1,0 +1,7 @@
+#!/bin/bash
+# Executável Coral para Linux/Mac
+# Uso: ./coral <arquivo.crl> [opções]
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CORAL_DIR="$(dirname "$SCRIPT_DIR")"
+python3 "$CORAL_DIR/coral.py" "$@"
