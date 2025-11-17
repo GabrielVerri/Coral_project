@@ -45,13 +45,13 @@ ESCREVA("Olá, Coral!")
 ```
 Executar:
 ```bash
-python coral.py ola.crl
+coral ola.crl
 ```
 
 ## Exemplos
 ```bash
-python coral.py exemplos/parser/ola_mundo.crl
-python coral.py exemplos/parser/funcoes.crl
+coral exemplos/parser/ola_mundo.crl
+coral exemplos/parser/funcoes.crl
 ```
 
 ## Problemas comuns
