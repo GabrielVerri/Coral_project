@@ -276,4 +276,8 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\nExecução interrompida pelo usuário.")
+        sys.exit(130)  # Código padrão para SIGINT
