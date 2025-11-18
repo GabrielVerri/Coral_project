@@ -6,10 +6,10 @@ $ErrorActionPreference = "Stop"
 Write-Host "`n=== Coral Language - Instalador ===" -ForegroundColor Cyan
 
 # Configurações
-$repo = "https://github.com/GabrielVerri/Coral_project/archive/refs/heads/dev.zip"
+$repo = "https://github.com/GabrielVerri/Coral_project/archive/refs/heads/main.zip"
 $zip = "$env:TEMP\coral.zip"
 $dir = "$env:USERPROFILE\CoralLanguage"
-$tmp = "$env:TEMP\Coral_project-dev"
+$tmp = "$env:TEMP\Coral_project-main"
 
 Write-Host "Baixando..." -ForegroundColor Yellow
 Invoke-WebRequest -Uri $repo -OutFile $zip -UseBasicParsing
