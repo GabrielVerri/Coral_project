@@ -1,0 +1,70 @@
+# Teste: Verificação de Indexação Completa
+
+ESCREVA("=== Teste de Indexação ===")
+ESCREVA()
+
+# 1. Acesso por índice
+ESCREVA("1. Acesso por índice:")
+lista = [10, 20, 30, 40, 50]
+ESCREVA(f"Lista original: {lista}")
+ESCREVA(f"lista[0] = {lista[0]}")
+ESCREVA(f"lista[2] = {lista[2]}")
+ESCREVA(f"lista[4] = {lista[4]}")
+ESCREVA()
+
+# 2. Modificação por índice
+ESCREVA("2. Modificação por índice:")
+lista[0] = 100
+ESCREVA(f"Após lista[0] = 100: {lista}")
+lista[2] = 300
+ESCREVA(f"Após lista[2] = 300: {lista}")
+lista[4] = 500
+ESCREVA(f"Após lista[4] = 500: {lista}")
+ESCREVA()
+
+# 3. Indexação encadeada (matriz)
+ESCREVA("3. Indexação encadeada:")
+matriz = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+]
+ESCREVA(f"Matriz: {matriz}")
+ESCREVA(f"matriz[0][0] = {matriz[0][0]}")
+ESCREVA(f"matriz[1][1] = {matriz[1][1]}")
+ESCREVA(f"matriz[2][2] = {matriz[2][2]}")
+ESCREVA()
+
+# 4. Modificação encadeada
+ESCREVA("4. Modificação em matriz:")
+matriz[0][0] = 99
+ESCREVA(f"Após matriz[0][0] = 99:")
+PARA linha DENTRODE matriz:
+    ESCREVA(f"  {linha}")
+ESCREVA()
+
+matriz[1][1] = 88
+ESCREVA(f"Após matriz[1][1] = 88:")
+PARA linha DENTRODE matriz:
+    ESCREVA(f"  {linha}")
+ESCREVA()
+
+# 5. Indexação em f-strings
+ESCREVA("5. Indexação em f-strings:")
+nomes = ["Ana", "Bruno", "Carlos"]
+ESCREVA(f"Primeiro: {nomes[0]}, Segundo: {nomes[1]}, Terceiro: {nomes[2]}")
+ESCREVA()
+
+# 6. Operadores compostos com indexação
+ESCREVA("6. Operadores compostos:")
+valores = [10, 20, 30]
+ESCREVA(f"Valores iniciais: {valores}")
+valores[0] = valores[0] + 5
+ESCREVA(f"Após valores[0] += 5: {valores}")
+valores[1] = valores[1] * 2
+ESCREVA(f"Após valores[1] *= 2: {valores}")
+valores[2] = valores[2] - 10
+ESCREVA(f"Após valores[2] -= 10: {valores}")
+ESCREVA()
+
+ESCREVA("=== Todos os testes passaram! ===")

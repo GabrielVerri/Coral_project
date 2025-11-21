@@ -212,6 +212,20 @@ class ParserCoral:
                     offset += 2  # Pula '.' e próximo ID
                     continue
                 
+                # Se encontrou '[', continua olhando (pode ser lista[0] =)
+                if token_seguinte.lexema == '[':
+                    offset += 1
+                    # Pula até encontrar ']'
+                    profundidade = 1
+                    while offset < len(self.tokens) - self.posicao and profundidade > 0:
+                        t = self.olhar_adiante(offset)
+                        if t and t.lexema == '[':
+                            profundidade += 1
+                        elif t and t.lexema == ']':
+                            profundidade -= 1
+                        offset += 1
+                    continue
+                
                 # Qualquer outra coisa, não é atribuição
                 break
         
@@ -231,14 +245,21 @@ class ParserCoral:
             identificador_token.coluna
         )
         
-        # Suporte para self.atributo = valor
-        from .ast_nodes import AcessoAtributoNode
+        # Suporte para self.atributo = valor e lista[0] = valor
+        from .ast_nodes import AcessoAtributoNode, IndexacaoNode
         alvo = identificador
         
-        while self.token_atual and self.token_atual.lexema == '.':
-            self.avancar()  # Consome '.'
-            atributo_token = self.consumir('ID', "Esperado nome do atributo após '.'")
-            alvo = AcessoAtributoNode(alvo, atributo_token.lexema, atributo_token.linha, atributo_token.coluna)
+        while self.token_atual and self.token_atual.lexema in ['.', '[']:
+            if self.token_atual.lexema == '.':
+                self.avancar()  # Consome '.'
+                atributo_token = self.consumir('ID', "Esperado nome do atributo após '.'")
+                alvo = AcessoAtributoNode(alvo, atributo_token.lexema, atributo_token.linha, atributo_token.coluna)
+            elif self.token_atual.lexema == '[':
+                token_colchete = self.token_atual
+                self.avancar()  # Consome '['
+                indice = self.expressao()
+                self.consumir(']', "Esperado ']' após índice")
+                alvo = IndexacaoNode(alvo, indice, token_colchete.linha, token_colchete.coluna)
         
         operador = self.token_atual
         if operador.lexema not in ['=', '+=', '-=', '*=', '/=', '%=']:
@@ -436,26 +457,36 @@ class ParserCoral:
             # Cria o identificador base
             expressao = IdentificadorNode(token.lexema, token.linha, token.coluna)
             
-            # Processa acessos encadeados: obj.attr1.attr2.metodo()
-            while self.token_atual and self.token_atual.lexema == '.':
-                self.avancar()  # Consome '.'
+            # Processa acessos encadeados: obj.attr1.attr2.metodo() ou lista[0] ou obj.lista[0]
+            while self.token_atual and self.token_atual.lexema in ['.', '[']:
+                if self.token_atual.lexema == '.':
+                    self.avancar()  # Consome '.'
+                    
+                    atributo_token = self.consumir('ID', "Esperado nome do atributo após '.'")
+                    atributo_nome = atributo_token.lexema
+                    
+                    # Verifica se é chamada de método: obj.metodo()
+                    if self.verificar('('):
+                        self.avancar()
+                        argumentos = self.lista_argumentos()
+                        self.consumir(')', "Esperado ')' após argumentos do método")
+                        # Cria acesso ao atributo (método) e depois chamada
+                        from .ast_nodes import AcessoAtributoNode
+                        acesso = AcessoAtributoNode(expressao, atributo_nome, atributo_token.linha, atributo_token.coluna)
+                        expressao = ChamadaFuncaoNode(acesso, argumentos, atributo_token.linha, atributo_token.coluna)
+                    else:
+                        # Apenas acesso ao atributo: obj.attr
+                        from .ast_nodes import AcessoAtributoNode
+                        expressao = AcessoAtributoNode(expressao, atributo_nome, atributo_token.linha, atributo_token.coluna)
                 
-                atributo_token = self.consumir('ID', "Esperado nome do atributo após '.'")
-                atributo_nome = atributo_token.lexema
-                
-                # Verifica se é chamada de método: obj.metodo()
-                if self.verificar('('):
-                    self.avancar()
-                    argumentos = self.lista_argumentos()
-                    self.consumir(')', "Esperado ')' após argumentos do método")
-                    # Cria acesso ao atributo (método) e depois chamada
-                    from .ast_nodes import AcessoAtributoNode
-                    acesso = AcessoAtributoNode(expressao, atributo_nome, atributo_token.linha, atributo_token.coluna)
-                    expressao = ChamadaFuncaoNode(acesso, argumentos, atributo_token.linha, atributo_token.coluna)
-                else:
-                    # Apenas acesso ao atributo: obj.attr
-                    from .ast_nodes import AcessoAtributoNode
-                    expressao = AcessoAtributoNode(expressao, atributo_nome, atributo_token.linha, atributo_token.coluna)
+                elif self.token_atual.lexema == '[':
+                    # Indexação: lista[0] ou dict["chave"]
+                    token_colchete = self.token_atual
+                    self.avancar()  # Consome '['
+                    indice = self.expressao()
+                    self.consumir(']', "Esperado ']' após índice")
+                    from .ast_nodes import IndexacaoNode
+                    expressao = IndexacaoNode(expressao, indice, token_colchete.linha, token_colchete.coluna)
             
             # Se não tinha '.', verifica se é chamada de função normal: func()
             if isinstance(expressao, IdentificadorNode) and self.verificar('('):
