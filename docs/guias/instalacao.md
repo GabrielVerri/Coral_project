@@ -8,17 +8,17 @@ projeto localmente com Python, veja `docs/guias/uso_local.md`.
 
 ### Windows (PowerShell)
 ```powershell
-irm https://raw.githubusercontent.com/GabrielVerri/Coral_project/main/quick_install.ps1 | iex
+irm https://raw.githubusercontent.com/GabrielVerri/Coral_project/dev/install.ps1 | iex
 ```
 
 ### Windows (CMD)
 ```cmd
-powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/GabrielVerri/Coral_project/main/quick_install.ps1 | iex"
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/GabrielVerri/Coral_project/dev/install.ps1 | iex"
 ```
 
 ### Linux / macOS (Bash)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/GabrielVerri/Coral_project/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/GabrielVerri/Coral_project/dev/install.sh | bash
 ```
 
 **O que isso faz (fluxo recomendado):**
