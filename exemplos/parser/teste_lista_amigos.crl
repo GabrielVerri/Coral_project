@@ -1,0 +1,47 @@
+# Programa de lista de amigos interativo
+
+ESCREVA("=== LISTA DE AMIGOS ===")
+ESCREVA("")
+
+# Cria uma lista vazia de amigos
+amigos = []
+
+# Solicita o nome do primeiro amigo
+ESCREVA("Digite o nome do primeiro amigo:")
+nome1 = LER()
+amigos = amigos + [nome1]
+
+# Solicita o nome do segundo amigo
+ESCREVA("Digite o nome do segundo amigo:")
+nome2 = LER()
+amigos = amigos + [nome2]
+
+# Solicita o nome do terceiro amigo
+ESCREVA("Digite o nome do terceiro amigo:")
+nome3 = LER()
+amigos = amigos + [nome3]
+
+# Mostra a lista completa
+ESCREVA("")
+ESCREVA("=== SUA LISTA DE AMIGOS ===")
+ESCREVA("Você tem " + TEXTO(TAMANHO(amigos)) + " amigos:")
+
+# Exibe cada amigo com número
+contador = 1
+PARA amigo DENTRODE amigos:
+    ESCREVA(TEXTO(contador) + ". " + amigo)
+    contador = contador + 1
+
+# Acessa um amigo específico por índice
+ESCREVA("")
+ESCREVA("Qual amigo você quer destacar? (1, 2 ou 3)")
+escolha = INTEIRO(LER())
+
+SE escolha >= 1 E escolha <= TAMANHO(amigos):
+    indice = escolha - 1
+    ESCREVA("Você escolheu: " + amigos[indice] + "!")
+SENAO:
+    ESCREVA("Número inválido! Escolha entre 1 e " + TEXTO(TAMANHO(amigos)))
+
+ESCREVA("")
+ESCREVA("Seu melhor amigo é: " + amigos[0])
