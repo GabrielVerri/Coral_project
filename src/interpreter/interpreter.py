@@ -419,13 +419,12 @@ class InterpretadorCoral:
     
     def visitar_ChamadaFuncaoNode(self, no):
         """Executa uma chamada de função ou método."""
-        from src.parser.ast_nodes import AcessoAtributoNode
-        
         # Avalia os argumentos
         argumentos = [self.visitar(arg) for arg in no.argumentos]
         
         # Se for chamada de método: obj.metodo()
-        if isinstance(no.nome, AcessoAtributoNode):
+        # Usa type().__name__ para evitar problemas com múltiplos imports do mesmo módulo
+        if type(no.nome).__name__ == 'AcessoAtributoNode':
             metodo = self.visitar(no.nome)
             
             # Se for método vinculado
