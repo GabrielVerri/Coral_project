@@ -10,12 +10,7 @@ Gerar LLVM IR a partir de um arquivo Coral:
 python coral.py --llvmir exemplos/llvm/aritmetica_simples.crl
 ```
 
-Compilar o `.ll` gerado (necessita `clang`):
-
-```bash
-clang exemplos/llvm/aritmetica_simples.ll -o programa.exe
-.\programa.exe
-```
+Isso criará um arquivo `.ll` com código LLVM IR válido.
 
 ## Exemplos incluídos
 

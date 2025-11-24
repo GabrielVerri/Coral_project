@@ -312,11 +312,7 @@ class CoralInterpreter:
                 
                 print(f"[OK] Codigo LLVM IR gerado: {output_file}\n")
                 print(llvm_code)
-                print(f"\n{'='*70}")
-                print(f"Para compilar e executar:")
-                print(f"  clang {output_file} -o programa.exe")
-                print(f"  .\\programa.exe")
-                print(f"{'='*70}\n")
+                print(f"\n{'='*70}\n")
                 
                 return True
             except Exception as e:

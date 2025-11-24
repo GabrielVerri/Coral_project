@@ -33,6 +33,25 @@ curl -fsSL https://raw.githubusercontent.com/GabrielVerri/Coral_project/dev/inst
 - **Windows**: Feche e reabra o terminal
 - **Linux/macOS**: Execute `source ~/.bashrc` (ou `~/.zshrc`)
 
+## Desinstalação
+
+### Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/GabrielVerri/Coral_project/dev/uninstall.ps1 | iex
+```
+
+### Linux / macOS
+```bash
+# Remove do PATH (edite ~/.bashrc ou ~/.zshrc)
+sed -i '/CoralLanguage/d' ~/.bashrc  # ou ~/.zshrc
+source ~/.bashrc
+
+# Delete a pasta
+rm -rf ~/CoralLanguage
+```
+
+**Após desinstalar:** Feche e reabra o terminal. O comando `coral` não funcionará mais.
+
 ## Requisitos
 
 - **Python**: 3.7 ou superior
