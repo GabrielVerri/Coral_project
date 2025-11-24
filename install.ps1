@@ -1,15 +1,15 @@
 # Instalador One-Line do Coral Language
-# Execute no PowerShell: irm https://raw.githubusercontent.com/GabrielVerri/Coral_project/dev/install.ps1 | iex
+# Execute no PowerShell: irm https://raw.githubusercontent.com/GabrielVerri/Coral_project/main/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
 Write-Host "`n=== Coral Language - Instalador ===" -ForegroundColor Cyan
 
 # Configurações
-$repo = "https://github.com/GabrielVerri/Coral_project/archive/refs/heads/dev.zip"
+$repo = "https://github.com/GabrielVerri/Coral_project/archive/refs/heads/main.zip"
 $zip = "$env:TEMP\coral.zip"
 $dir = "$env:USERPROFILE\CoralLanguage"
-$tmp = "$env:TEMP\Coral_project-dev"
+$tmp = "$env:TEMP\Coral_project-main"
 
 Write-Host "Baixando..." -ForegroundColor Yellow
 Invoke-WebRequest -Uri $repo -OutFile $zip -UseBasicParsing
