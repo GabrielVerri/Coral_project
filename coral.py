@@ -17,12 +17,13 @@ import sys
 import os
 import argparse
 
-# Adiciona o diretório raiz ao path
-sys.path.insert(0, os.path.dirname(__file__))
+# Adiciona o diretório src ao path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from src.lexer.lexer import LexerCoral
-from src.parser.parser import ParserCoral, exibir_ast, ErroSintatico
-from src.interpreter.interpreter import executar_programa
+from lexer.lexer import LexerCoral
+from parser.parser import ParserCoral, exibir_ast, ErroSintatico
+from interpreter.interpreter import executar_programa
+from llvm.llvm_compiler import LLVMCompiler
 
 __version__ = "0.1.0"
 __author__ = "Coral Language Team"
@@ -60,7 +61,7 @@ class CoralInterpreter:
             if exibir:
                 print(f"{'='*70}")
                 print(f"Análise Léxica - Arquivo: {self.arquivo}")
-                print(f"{'='*70}\n")
+                print(f"{'='*70}")
                 print(f"{'TOKEN':<20} | TIPO")
                 print("-" * 42)
             
@@ -75,7 +76,7 @@ class CoralInterpreter:
                     break
             
             if exibir:
-                print(f"\nAnálise léxica concluída: {len(self.tokens)-1} tokens encontrados.\n")
+                print(f"Análise léxica concluída: {len(self.tokens)-1} tokens encontrados.\n")
             
             return True
             
@@ -95,7 +96,7 @@ class CoralInterpreter:
             if exibir:
                 print(f"{'='*70}")
                 print(f"Análise Sintática - Arquivo: {self.arquivo}")
-                print(f"{'='*70}\n")
+                print(f"{'='*70}")
             if exibir:
                 print(f"\nAnálise sintática concluída com sucesso!\n")
             
@@ -108,8 +109,143 @@ class CoralInterpreter:
             print(f"\nErro inesperado: {type(e).__name__}: {e}\n")
             return False
     
+    def _imprimir_ast(self, no, nivel=0):
+        """Imprime a árvore AST de forma hierárquica e simples."""
+        if no is None:
+            return
+        
+        indentacao = "  " * nivel
+        nome_classe = type(no).__name__
+        
+        # Imprime o nó atual
+        print(f"{indentacao}{nome_classe}", end="")
+        
+        # Adiciona informações específicas do nó
+        if hasattr(no, 'nome'):
+            print(f"(nome={no.nome})", end="")
+        elif hasattr(no, 'valor') and nome_classe == 'LiteralNode':
+            valor_repr = repr(no.valor) if isinstance(no.valor, str) else no.valor
+            print(f"(valor={valor_repr})", end="")
+        elif hasattr(no, 'operador') and nome_classe in ['ExpressaoBinariaNode', 'ExpressaoUnariaNode']:
+            op = no.operador.lexema if hasattr(no.operador, 'lexema') else no.operador
+            print(f"(op={op})", end="")
+        
+        print()  # Nova linha
+        
+        # Processa nós filhos baseado no tipo
+        if hasattr(no, 'declaracoes'):  # ProgramaNode
+            for decl in no.declaracoes:
+                self._imprimir_ast(decl, nivel + 1)
+        
+        elif hasattr(no, 'instrucoes'):  # BlocoNode
+            for instr in no.instrucoes:
+                self._imprimir_ast(instr, nivel + 1)
+        
+        elif nome_classe == 'AtribuicaoNode':
+            print(f"{indentacao}  identificador:")
+            self._imprimir_ast(no.identificador, nivel + 2)
+            print(f"{indentacao}  expressao:")
+            self._imprimir_ast(no.expressao, nivel + 2)
+        
+        elif nome_classe == 'ExpressaoBinariaNode':
+            print(f"{indentacao}  esquerda:")
+            self._imprimir_ast(no.esquerda, nivel + 2)
+            print(f"{indentacao}  direita:")
+            self._imprimir_ast(no.direita, nivel + 2)
+        
+        elif nome_classe == 'ExpressaoUnariaNode':
+            print(f"{indentacao}  expressao:")
+            self._imprimir_ast(no.expressao, nivel + 2)
+        
+        elif nome_classe == 'SeNode':
+            print(f"{indentacao}  condicao:")
+            self._imprimir_ast(no.condicao, nivel + 2)
+            print(f"{indentacao}  bloco_se:")
+            self._imprimir_ast(no.bloco_se, nivel + 2)
+            if no.blocos_senaose:
+                print(f"{indentacao}  blocos_senaose:")
+                for cond, bloco in no.blocos_senaose:
+                    print(f"{indentacao}    condicao:")
+                    self._imprimir_ast(cond, nivel + 3)
+                    print(f"{indentacao}    bloco:")
+                    self._imprimir_ast(bloco, nivel + 3)
+            if no.bloco_senao:
+                print(f"{indentacao}  bloco_senao:")
+                self._imprimir_ast(no.bloco_senao, nivel + 2)
+        
+        elif nome_classe == 'EnquantoNode':
+            print(f"{indentacao}  condicao:")
+            self._imprimir_ast(no.condicao, nivel + 2)
+            print(f"{indentacao}  bloco:")
+            self._imprimir_ast(no.bloco, nivel + 2)
+        
+        elif nome_classe == 'ParaNode':
+            print(f"{indentacao}  variavel: {no.variavel}")
+            print(f"{indentacao}  iteravel:")
+            self._imprimir_ast(no.iteravel, nivel + 2)
+            print(f"{indentacao}  bloco:")
+            self._imprimir_ast(no.bloco, nivel + 2)
+        
+        elif nome_classe == 'FuncaoNode':
+            print(f"{indentacao}  parametros: {no.parametros}")
+            print(f"{indentacao}  bloco:")
+            self._imprimir_ast(no.bloco, nivel + 2)
+        
+        elif nome_classe == 'ChamadaFuncaoNode':
+            if isinstance(no.nome, str):
+                print(f"{indentacao}  funcao: {no.nome}")
+            else:
+                print(f"{indentacao}  funcao:")
+                self._imprimir_ast(no.nome, nivel + 2)
+            if no.argumentos:
+                print(f"{indentacao}  argumentos:")
+                for arg in no.argumentos:
+                    self._imprimir_ast(arg, nivel + 2)
+        
+        elif nome_classe == 'RetornarNode':
+            if no.expressao:
+                print(f"{indentacao}  expressao:")
+                self._imprimir_ast(no.expressao, nivel + 2)
+        
+        elif nome_classe == 'ListaNode':
+            if no.elementos:
+                print(f"{indentacao}  elementos:")
+                for elem in no.elementos:
+                    self._imprimir_ast(elem, nivel + 2)
+        
+        elif nome_classe == 'IndexacaoNode':
+            print(f"{indentacao}  objeto:")
+            self._imprimir_ast(no.objeto, nivel + 2)
+            print(f"{indentacao}  indice:")
+            self._imprimir_ast(no.indice, nivel + 2)
+        
+        elif nome_classe == 'ClasseNode':
+            print(f"{indentacao}  bloco:")
+            self._imprimir_ast(no.bloco, nivel + 2)
+        
+        elif nome_classe == 'AcessoAtributoNode':
+            print(f"{indentacao}  objeto:")
+            self._imprimir_ast(no.objeto, nivel + 2)
+            print(f"{indentacao}  atributo: {no.atributo}")
+        
+        elif nome_classe == 'DicionarioNode':
+            if no.pares:
+                print(f"{indentacao}  pares:")
+                for chave, valor in no.pares:
+                    print(f"{indentacao}    chave:")
+                    self._imprimir_ast(chave, nivel + 3)
+                    print(f"{indentacao}    valor:")
+                    self._imprimir_ast(valor, nivel + 3)
+    
     def executar(self, modo='completo'):
-        """Executa o interpretador no modo especificado."""
+        """
+        Executa o interpretador no modo especificado.
+        
+        Args:
+            modo: 'lex' (apenas léxico), 'parse' (apenas sintático), 
+                  'completo' (análise completa + execução), 'ast' (mostra AST),
+                  'cat' (exibe conteúdo do arquivo), 'llvmir' (compila para LLVM IR)
+        """
         self.carregar_arquivo()
         
         if modo == 'cat':
@@ -137,22 +273,57 @@ class CoralInterpreter:
             return True
         
         elif modo == 'ast':
-            # Exibe a árvore sintática abstrata
+            if not self.analise_lexica(exibir=False):
+                return False
+            
+            if not self.analise_sintatica(exibir=True):
+                return False
+            
+            print(f"{'='*70}")
+            print(f"AST gerada com sucesso!")
+            print(f"{'='*70}\n")
+            
+            # Imprime a árvore AST
+            self._imprimir_ast(self.ast)
+            print()
+            
+            return True
+        
+        elif modo == 'llvmir':
+            # Modo LLVM IR: compila para LLVM
             if not self.analise_lexica(exibir=False):
                 return False
             
             if not self.analise_sintatica(exibir=False):
                 return False
             
-            # Exibe a AST
-            from src.parser.parser import exibir_ast
-            print(f"\n{'='*70}")
-            print(f"Árvore Sintática Abstrata (AST) - {self.arquivo}")
+            print(f"{'='*70}")
+            print(f"Compilação LLVM IR")
             print(f"{'='*70}\n")
-            exibir_ast(self.ast)
-            print()
             
-            return True
+            try:
+                compiler = LLVMCompiler()
+                llvm_code = compiler.compile(self.ast)
+                
+                # Salva o arquivo .ll
+                output_file = self.arquivo.replace('.crl', '.ll')
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(llvm_code)
+                
+                print(f"[OK] Codigo LLVM IR gerado: {output_file}\n")
+                print(llvm_code)
+                print(f"\n{'='*70}")
+                print(f"Para compilar e executar:")
+                print(f"  clang {output_file} -o programa.exe")
+                print(f"  .\\programa.exe")
+                print(f"{'='*70}\n")
+                
+                return True
+            except Exception as e:
+                print(f"Erro durante compilação LLVM: {e}", file=sys.stderr)
+                import traceback
+                traceback.print_exc()
+                return False
         
         elif modo == 'completo':
             # Modo completo: executa o programa e mostra apenas o output
@@ -164,14 +335,13 @@ class CoralInterpreter:
             
             # Executa o programa (apenas output, sem mensagens)
             try:
-                from src.interpreter.interpreter import InterpretadorCoral
+                from interpreter.interpreter import InterpretadorCoral
                 interpretador = InterpretadorCoral()
                 interpretador.interpretar(self.ast)
                 return True
             except Exception as e:
-                print(f"Erro durante execução: {e}")
+                print(f"Erro durante execução: {e}", file=sys.stderr)
                 return False
-
 
 def exibir_logo():
     logo = r"""
@@ -196,6 +366,7 @@ Exemplos de uso:
   coral --lex programa.crl        # Apenas análise léxica
   coral --parse programa.crl      # Valida sintaxe
   coral --ast programa.crl        # Exibe a AST
+  coral --llvmir programa.crl     # Compila para LLVM IR
   coral --cat programa.crl        # Exibe o conteúdo do arquivo
   coral --logo                    # Exibe o logo do Coral
   coral --version                 # Exibe a versão
@@ -232,6 +403,12 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
         '--cat',
         action='store_true',
         help='Exibir o conteúdo do arquivo'
+    )
+    
+    parser.add_argument(
+        '--llvmir',
+        action='store_true',
+        help='Compilar para LLVM IR'
     )
     
     parser.add_argument(
@@ -273,6 +450,8 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
         modo = 'ast'
     elif args.cat:
         modo = 'cat'
+    elif args.llvmir:
+        modo = 'llvmir'
     else:
         modo = 'completo'
     
@@ -281,6 +460,7 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
     sucesso = interpretador.executar(modo)
     
     sys.exit(0 if sucesso else 1)
+
 
 if __name__ == "__main__":
     main()

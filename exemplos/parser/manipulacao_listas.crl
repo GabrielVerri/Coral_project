@@ -1,0 +1,140 @@
+# Exemplo: Manipulação de Listas em Coral
+
+ESCREVA("=== Manipulação de Listas ===")
+ESCREVA()
+
+# 1. Criando listas
+numeros = [1, 2, 3, 4, 5]
+frutas = ["maçã", "banana", "laranja"]
+vazia = []
+
+ESCREVA("Lista de números:", numeros)
+ESCREVA("Lista de frutas:", frutas)
+ESCREVA()
+
+# 2. Acessando elementos por índice
+ESCREVA("--- Acesso por Índice ---")
+primeiro_num = numeros[0]
+ultimo_num = numeros[4]
+segunda_fruta = frutas[1]
+ESCREVA(f"Primeiro número: {primeiro_num}")
+ESCREVA(f"Último número: {ultimo_num}")
+ESCREVA(f"Segunda fruta: {segunda_fruta}")
+ESCREVA()
+
+# 3. Tamanho da lista
+ESCREVA("--- Tamanho ---")
+ESCREVA(f"Quantidade de números: {TAMANHO(numeros)}")
+ESCREVA(f"Quantidade de frutas: {TAMANHO(frutas)}")
+ESCREVA()
+
+# 4. Modificando elementos
+ESCREVA("--- Modificação ---")
+numeros[0] = 10
+ESCREVA(f"Após modificar primeiro elemento: {numeros}")
+ESCREVA()
+
+# 5. Adicionando elementos (concatenação)
+ESCREVA("--- Adição ---")
+numeros = numeros + [6]
+ESCREVA(f"Após adicionar 6: {numeros}")
+
+frutas = frutas + ["uva", "morango"]
+ESCREVA(f"Após adicionar frutas: {frutas}")
+ESCREVA()
+
+# 6. Iterando sobre listas
+ESCREVA("--- Iteração com PARA ---")
+ESCREVA("Números:")
+PARA num DENTRODE numeros:
+    ESCREVA(f"  - {num}")
+
+ESCREVA("Frutas:")
+PARA fruta DENTRODE frutas:
+    ESCREVA(f"  - {fruta}")
+ESCREVA()
+
+# 7. Filtrando números pares usando módulo
+ESCREVA("--- Filtragem com Módulo (%) ---")
+pares = []
+PARA n DENTRODE numeros:
+    SE n % 2 == 0:
+        pares = pares + [n]
+
+ESCREVA(f"Números pares: {pares}")
+ESCREVA()
+
+# 8. Somando elementos da lista
+ESCREVA("--- Soma dos Elementos ---")
+soma = 0
+PARA n DENTRODE numeros:
+    soma = soma + n
+ESCREVA(f"Soma total: {soma}")
+ESCREVA()
+
+# 9. Encontrando maior e menor
+ESCREVA("--- Maior e Menor ---")
+maior = numeros[0]
+menor = numeros[0]
+
+PARA n DENTRODE numeros:
+    SE n > maior:
+        maior = n
+    SE n < menor:
+        menor = n
+
+ESCREVA(f"Maior número: {maior}")
+ESCREVA(f"Menor número: {menor}")
+ESCREVA()
+
+# 10. Criando lista com INTERVALO
+ESCREVA("--- Gerando Lista com INTERVALO ---")
+sequencia = INTERVALO(1, 11)
+ESCREVA(f"Números de 1 a 10: {sequencia}")
+
+pares_ate_20 = INTERVALO(0, 21, 2)
+ESCREVA(f"Números pares até 20: {pares_ate_20}")
+ESCREVA()
+
+# 11. Lista de listas (matriz)
+ESCREVA("--- Lista de Listas (Matriz) ---")
+matriz = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+]
+
+ESCREVA("Matriz 3x3:")
+PARA linha DENTRODE matriz:
+    ESCREVA(f"  {linha}")
+
+ESCREVA(f"Elemento [0][0]: {matriz[0][0]}")
+ESCREVA(f"Elemento [1][2]: {matriz[1][2]}")
+ESCREVA()
+
+# 12. Operações com módulo
+ESCREVA("=== Operações com Módulo (%) ===")
+ESCREVA()
+
+ESCREVA("--- Verificando Par/Ímpar ---")
+PARA i DENTRODE INTERVALO(1, 11):
+    SE i % 2 == 0:
+        ESCREVA(f"{i} é par")
+    SENAO:
+        ESCREVA(f"{i} é ímpar")
+ESCREVA()
+
+ESCREVA("--- Múltiplos de 3 ---")
+PARA i DENTRODE INTERVALO(1, 21):
+    SE i % 3 == 0:
+        ESCREVA(f"{i} é múltiplo de 3")
+ESCREVA()
+
+ESCREVA("--- Resto da Divisão ---")
+dividendo = 17
+divisor = 5
+resto = dividendo % divisor
+quociente = dividendo / divisor
+ESCREVA(f"{dividendo} dividido por {divisor}:")
+ESCREVA(f"  Quociente: {quociente}")
+ESCREVA(f"  Resto: {resto}")

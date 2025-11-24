@@ -2,34 +2,54 @@
 
 Linguagem de programação interpretada com sintaxe em português, desenvolvida para a disciplina de Compiladores e Linguagens Formais.
 
-## 🚀 Instalação e Uso
+## Como usar (forma recomendada)
 
-```bash
-git clone https://github.com/GabrielVerri/Coral_project.git
-cd Coral_project
-python coral.py arquivo.crl
+A forma **principal** de usar a linguagem Coral é instalando o comando
+`coral` via script de instalação (sem precisar clonar o repositório).
+
+1. Siga o guia em `docs/guias/instalacao.md` para instalar o comando `coral`.
+2. Crie um arquivo com extensão `.crl` (por exemplo, `programa.crl`):
+
+```coral
+ESCREVA("Olá, Coral!")
 ```
 
-> **Nota:** Use `python coral.py` para executar em qualquer máquina sem configuração.  
-> Opcionalmente, você pode instalar o comando `coral` (ver [INSTALL.md](docs/guias/INSTALL.md)).
-
-**Guias:** [INSTALL.md](docs/guias/INSTALL.md) | [Linux/Mac](docs/guias/LINUX.md)
-
-## Comandos
+3. Execute o programa com:
 
 ```bash
-python coral.py programa.crl          # Executar
-python coral.py --lex programa.crl    # Ver tokens
-python coral.py --parse programa.crl  # Ver AST
-python coral.py --help                # Ajuda
+coral programa.crl
+coral --help
 ```
+
+> Essa é a forma recomendada de uso para quem quer apenas **programar em Coral**.
+
+**Guias:** [Instalação](docs/guias/instalacao.md) | [Uso local / exemplos](docs/guias/uso_local.md)
+
+## Comandos (após instalação)
+
+```bash
+coral programa.crl          # Executar
+coral --lex programa.crl    # Ver tokens
+coral --parse programa.crl  # Ver análise sintática
+coral --ast programa.crl    # Ver AST
+coral --help                # Ajuda
+coral --logo                # Ver logo
+```
+
+## Uso local para desenvolvimento
+
+Para detalhes de **uso local**, criação de arquivos `.crl`, exemplos e
+execução com Python, consulte o guia:
+
+- `docs/guias/uso_local.md` (uso local, exemplos e fluxo de desenvolvimento)
 
 ## Estrutura do Projeto
 
 ```
 Coral_project/
 ├── coral.py                      # Interpretador principal
-├── install.bat / install.sh      # Instaladores
+├── install.ps1 / install.sh      # Instaladores
+├── install.bat                   # Launcher para CMD (Windows)
 ├── src/
 │   ├── lexer/                   # Análise léxica (AFN→AFD)
 │   ├── parser/                  # Análise sintática (LL1)
@@ -48,7 +68,7 @@ Coral_project/
 
 ## Documentação
 
-- **[INSTALL.md](docs/guias/INSTALL.md)** - Instalação e primeiros passos
+- **[instalacao.md](docs/guias/instalacao.md)** - Instalação e primeiros passos
 - **[Especificação](docs/especificacao_linguagem/)** - Gramática e sintaxe
 - **[Lexer](src/lexer/README.md)** - Analisador léxico
 - **[Parser](src/parser/README.md)** - Analisador sintático

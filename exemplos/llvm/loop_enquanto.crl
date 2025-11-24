@@ -1,0 +1,12 @@
+# Exemplo: Loop ENQUANTO
+# Conta de 1 a 5
+
+contador = 1
+
+ESCREVA("Contando ate 5:")
+
+ENQUANTO contador <= 5:
+    ESCREVA(contador)
+    contador = contador + 1
+
+ESCREVA("Fim da contagem")

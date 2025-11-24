@@ -1,0 +1,17 @@
+# Exemplo simples para compilação LLVM IR
+# Operações aritméticas básicas
+
+a = 10
+b = 20
+c = a + b
+
+ESCREVA("Resultado da soma:")
+ESCREVA(c)
+
+d = c * 2
+ESCREVA("Dobro do resultado:")
+ESCREVA(d)
+
+e = d - 15
+ESCREVA("Subtraindo 15:")
+ESCREVA(e)
