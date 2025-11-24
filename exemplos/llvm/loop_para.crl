@@ -1,0 +1,14 @@
+# Exemplo: Loop PARA com INTERVALO
+# Demonstra diferentes usos do PARA
+
+ESCREVA("Contagem de 0 a 4:")
+PARA i DENTRODE INTERVALO(5):
+    ESCREVA(i)
+
+ESCREVA("Contagem de 1 a 5:")
+PARA i DENTRODE INTERVALO(1, 6):
+    ESCREVA(i)
+
+ESCREVA("Contagem de 2 em 2:")
+PARA i DENTRODE INTERVALO(0, 10, 2):
+    ESCREVA(i)

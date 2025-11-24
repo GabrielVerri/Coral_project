@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from lexer.lexer import LexerCoral
 from parser.parser import ParserCoral, exibir_ast, ErroSintatico
 from interpreter.interpreter import executar_programa
+from llvm.llvm_compiler import LLVMCompiler
 
 __version__ = "0.1.0"
 __author__ = "Coral Language Team"
@@ -243,7 +244,7 @@ class CoralInterpreter:
         Args:
             modo: 'lex' (apenas léxico), 'parse' (apenas sintático), 
                   'completo' (análise completa + execução), 'ast' (mostra AST),
-                  'cat' (exibe conteúdo do arquivo)
+                  'cat' (exibe conteúdo do arquivo), 'llvmir' (compila para LLVM IR)
         """
         self.carregar_arquivo()
         
@@ -274,6 +275,42 @@ class CoralInterpreter:
             print()
             
             return True
+        
+        elif modo == 'llvmir':
+            # Modo LLVM IR: compila para LLVM
+            if not self.analise_lexica(exibir=False):
+                return False
+            
+            if not self.analise_sintatica(exibir=False):
+                return False
+            
+            print(f"{'='*70}")
+            print(f"Compilação LLVM IR")
+            print(f"{'='*70}\n")
+            
+            try:
+                compiler = LLVMCompiler()
+                llvm_code = compiler.compile(self.ast)
+                
+                # Salva o arquivo .ll
+                output_file = self.arquivo.replace('.crl', '.ll')
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(llvm_code)
+                
+                print(f"[OK] Codigo LLVM IR gerado: {output_file}\n")
+                print(llvm_code)
+                print(f"\n{'='*70}")
+                print(f"Para compilar e executar:")
+                print(f"  clang {output_file} -o programa.exe")
+                print(f"  .\\programa.exe")
+                print(f"{'='*70}\n")
+                
+                return True
+            except Exception as e:
+                print(f"Erro durante compilação LLVM: {e}", file=sys.stderr)
+                import traceback
+                traceback.print_exc()
+                return False
         
         elif modo == 'completo':
             # Modo completo: executa o programa e mostra apenas o output
@@ -316,6 +353,7 @@ Exemplos de uso:
   coral --lex programa.crl        # Apenas análise léxica
   coral --parse programa.crl      # Apenas análise sintática
   coral --ast programa.crl        # Exibe a AST
+  coral --llvmir programa.crl     # Compila para LLVM IR
   coral --cat programa.crl        # Exibe o conteúdo do arquivo
   coral --logo                    # Exibe o logo do Coral
   coral --version                 # Exibe a versão
@@ -352,6 +390,12 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
         '--cat',
         action='store_true',
         help='Exibir o conteúdo do arquivo'
+    )
+    
+    parser.add_argument(
+        '--llvmir',
+        action='store_true',
+        help='Compilar para LLVM IR'
     )
     
     parser.add_argument(
@@ -393,6 +437,8 @@ Para mais informações, visite: https://github.com/GabrielVerri/Coral_project
         modo = 'ast'
     elif args.cat:
         modo = 'cat'
+    elif args.llvmir:
+        modo = 'llvmir'
     else:
         modo = 'completo'
     
