@@ -1,6 +1,6 @@
 #!/bin/bash
 # Instalador do Coral Language para Linux/macOS
-# Execute: curl -fsSL https://raw.githubusercontent.com/GabrielVerri/Coral_project/dev/install.sh | bash
+# Execute: curl -fsSL https://raw.githubusercontent.com/GabrielVerri/Coral_project/main/install.sh | bash
 
 set -e
 
@@ -9,10 +9,10 @@ echo "=== Coral Language - Instalador ==="
 echo ""
 
 # Configurações
-REPO="https://github.com/GabrielVerri/Coral_project/archive/refs/heads/dev.zip"
+REPO="https://github.com/GabrielVerri/Coral_project/archive/refs/heads/main.zip"
 ZIP="/tmp/coral.zip"
 DIR="$HOME/CoralLanguage"
-TMP="/tmp/Coral_project-dev"
+TMP="/tmp/Coral_project-main"
 
 # Detectar SO
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then

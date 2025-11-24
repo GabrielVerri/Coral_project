@@ -47,11 +47,10 @@ class AFDUnificado:
         if not entrada:
             return None
 
-        # F-strings
-        if entrada.startswith('f"""') or entrada.startswith("f'''"):
-            aspas = entrada[1:4]
+        # F-strings multilinhas (somente aspas duplas triplas)
+        if entrada.startswith('f"""'):
             if len(entrada) >= 7:
-                pos = entrada.find(aspas, 4)
+                pos = entrada.find('"""', 4)
                 if pos >= 0:
                     return (entrada[:pos+3], pos+3, "STRING_MULTILINE")
         elif entrada.startswith('f"') or entrada.startswith("f'"):
@@ -92,21 +91,33 @@ class AFDUnificado:
                 return (entrada[:pos+1], pos+1, "COMENTARIO_LINHA")
             return (entrada, len(entrada), "COMENTARIO_LINHA")
             
-        # Strings multilinhas
-        if entrada.startswith('"""') or entrada.startswith("'''"):
-            aspas = entrada[:3]
-            if len(entrada) >= 6:
-                pos = entrada.find(aspas, 3)
-                if pos >= 0:
+        # Strings multilinhas (apenas """ sem quebra entre as aspas)
+        # Multistring permite conteúdo multilinhas, mas as aspas de abertura/fechamento 
+        # devem estar completas (""" na mesma linha)
+        if entrada.startswith('"""'):
+            # Procura o fechamento """
+            pos = 3
+            while pos < len(entrada):
+                if entrada[pos:pos+3] == '"""':
                     return (entrada[:pos+3], pos+3, "STRING_MULTILINE")
+                pos += 1
+            # String não fechada
+            return None
         
         # Strings normais
         if entrada[0] in ('"', "'"):
             aspas = entrada[0]
-            pos = entrada.find(aspas, 1)
-            if pos > 0 and not '\n' in entrada[:pos]:
-                return (entrada[:pos+1], pos+1, "STRING")
-            return None
+            pos = 1
+            while pos < len(entrada):
+                if entrada[pos] == '\\':
+                    pos += 2  # Pula caractere escapado
+                    continue
+                if entrada[pos] == aspas:
+                    return (entrada[:pos+1], pos+1, "STRING")
+                if entrada[pos] == '\n':
+                    return None  # String não pode ter quebra de linha
+                pos += 1
+            return None  # String não fechada
         
         # Números inteiros e decimais
         if entrada[0].isdigit():

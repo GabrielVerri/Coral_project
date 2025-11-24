@@ -1,0 +1,20 @@
+# Exemplo: Estrutura de decisão SE/SENAO
+# Testa comparações e decisões
+
+x = 10
+y = 5
+
+ESCREVA("Testando SE/SENAO:")
+
+SE x > y:
+    ESCREVA("x eh maior que y")
+SENAO:
+    ESCREVA("x nao eh maior que y")
+
+SE x == 10:
+    ESCREVA("x eh igual a 10")
+
+SE y < 3:
+    ESCREVA("y eh menor que 3")
+SENAO:
+    ESCREVA("y nao eh menor que 3")

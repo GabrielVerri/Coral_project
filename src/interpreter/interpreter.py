@@ -276,6 +276,40 @@ class InterpretadorCoral:
         """Executa uma atribuição de variável ou atributo."""
         valor = self.visitar(no.expressao)
         
+        # Se é atribuição a elemento de lista/dict: lista[0] = valor
+        if type(no.identificador).__name__ == 'IndexacaoNode':
+            alvo = no.identificador
+            
+            # Obtem o objeto base (precisa ser uma referência, não cópia)
+            if type(alvo.objeto).__name__ == 'IdentificadorNode':
+                # Acessa diretamente a variável no ambiente
+                nome_var = alvo.objeto.nome
+                objeto = self.ambiente_atual.obter_variavel(nome_var)
+            elif type(alvo.objeto).__name__ == 'IndexacaoNode':
+                # Indexação encadeada: matriz[0][1]
+                objeto = self.visitar(alvo.objeto)
+            else:
+                objeto = self.visitar(alvo.objeto)
+            
+            indice = self.visitar(alvo.indice)
+            
+            if no.operador == '=':
+                objeto[indice] = valor
+            else:
+                # Operadores compostos: +=, -=, etc
+                valor_atual = objeto[indice]
+                if no.operador == '+=':
+                    objeto[indice] = valor_atual + valor
+                elif no.operador == '-=':
+                    objeto[indice] = valor_atual - valor
+                elif no.operador == '*=':
+                    objeto[indice] = valor_atual * valor
+                elif no.operador == '/=':
+                    objeto[indice] = valor_atual / valor
+                elif no.operador == '%=':
+                    objeto[indice] = valor_atual % valor
+            return
+        
         # Se é atribuição a atributo: self.nome = valor
         if type(no.identificador).__name__ == 'AcessoAtributoNode':
             alvo = no.identificador
@@ -302,7 +336,7 @@ class InterpretadorCoral:
             return
         
         # Atribuição normal a variável
-        if isinstance(no.identificador, IdentificadorNode):
+        if type(no.identificador).__name__ == 'IdentificadorNode':
             nome = no.identificador.nome
         else:
             nome = no.identificador
@@ -555,6 +589,20 @@ class InterpretadorCoral:
     def visitar_ListaNode(self, no):
         """Cria uma lista."""
         return [self.visitar(elemento) for elemento in no.elementos]
+    
+    def visitar_IndexacaoNode(self, no):
+        """Acessa elemento de lista ou dicionário por índice."""
+        objeto = self.visitar(no.objeto)
+        indice = self.visitar(no.indice)
+        
+        try:
+            return objeto[indice]
+        except (IndexError, KeyError, TypeError) as e:
+            raise ErroExecucao(
+                f"Erro ao acessar índice: {str(e)}",
+                no.linha,
+                no.coluna
+            )
     
     def visitar_DicionarioNode(self, no):
         """Cria um dicionário."""

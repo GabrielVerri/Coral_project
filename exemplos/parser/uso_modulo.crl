@@ -1,0 +1,137 @@
+# Exemplo: Aplicações Práticas do Operador Módulo (%)
+
+ESCREVA("=== Aplicações do Operador Módulo ===")
+ESCREVA()
+
+# 1. Sistema de turno circular
+ESCREVA("--- Sistema de Turnos ---")
+jogadores = ["Ana", "Bruno", "Carlos", "Diana"]
+num_jogadores = TAMANHO(jogadores)
+
+ESCREVA(f"Jogadores: {jogadores}")
+ESCREVA()
+
+ESCREVA("Simulando 10 rodadas:")
+PARA rodada DENTRODE INTERVALO(1, 11):
+    indice = rodada % num_jogadores
+    jogador_atual = jogadores[indice]
+    ESCREVA(f"Rodada {rodada}: Vez de {jogador_atual}")
+ESCREVA()
+
+# 2. Conversão de horas (formato 24h para 12h)
+ESCREVA("--- Conversão de Horário ---")
+PARA hora DENTRODE INTERVALO(0, 25):
+    hora_12 = hora % 12
+    SE hora_12 == 0:
+        hora_12 = 12
+    
+    SE hora < 12:
+        periodo = "AM"
+    SENAO:
+        periodo = "PM"
+    
+    ESCREVA(f"{hora}:00 (24h) = {hora_12}:00 {periodo}")
+ESCREVA()
+
+# 3. Verificação de ano bissexto
+ESCREVA("--- Anos Bissextos ---")
+
+FUNCAO eh_bissexto(ano):
+    SE ano % 400 == 0:
+        RETORNAR VERDADE
+    SE ano % 100 == 0:
+        RETORNAR FALSO
+    SE ano % 4 == 0:
+        RETORNAR VERDADE
+    RETORNAR FALSO
+
+anos = [2020, 2021, 2022, 2023, 2024, 2025, 2100, 2400]
+PARA ano DENTRODE anos:
+    SE eh_bissexto(ano):
+        ESCREVA(f"{ano} é bissexto")
+    SENAO:
+        ESCREVA(f"{ano} NÃO é bissexto")
+ESCREVA()
+
+# 4. Distribuição em grupos
+ESCREVA("--- Distribuição em Grupos ---")
+total_pessoas = 25
+tamanho_grupo = 4
+
+grupos_completos = total_pessoas / tamanho_grupo
+pessoas_sobrando = total_pessoas % tamanho_grupo
+
+ESCREVA(f"Total de pessoas: {total_pessoas}")
+ESCREVA(f"Tamanho do grupo: {tamanho_grupo}")
+ESCREVA(f"Grupos completos: {grupos_completos}")
+ESCREVA(f"Pessoas sobrando: {pessoas_sobrando}")
+ESCREVA()
+
+# 5. Padrão alternado (zebrado)
+ESCREVA("--- Padrão Zebrado ---")
+PARA i DENTRODE INTERVALO(1, 11):
+    SE i % 2 == 1:
+        cor = "Branco"
+    SENAO:
+        cor = "Preto"
+    ESCREVA(f"Linha {i}: {cor}")
+ESCREVA()
+
+# 6. Extrair dígitos de um número
+ESCREVA("--- Extrair Último Dígito ---")
+numeros = [123, 456, 789, 1024, 9876]
+PARA num DENTRODE numeros:
+    ultimo_digito = num % 10
+    ESCREVA(f"Número {num} -> Último dígito: {ultimo_digito}")
+ESCREVA()
+
+# 7. Contador de dias da semana
+ESCREVA("--- Dias da Semana ---")
+dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"]
+
+ESCREVA("Próximos 14 dias começando de Domingo:")
+PARA i DENTRODE INTERVALO(14):
+    indice = i % 7
+    dia = dias[indice]
+    ESCREVA(f"Dia {i + 1}: {dia}")
+ESCREVA()
+
+# 8. Validação de dígito verificador simples
+ESCREVA("--- Dígito Verificador (Mod 11) ---")
+
+FUNCAO calcular_digito(numero):
+    soma = 0
+    multiplicador = 2
+    
+    # Simula extração de dígitos (simplificado)
+    digitos = [numero / 1000, numero % 1000 / 100, numero % 100 / 10, numero % 10]
+    
+    PARA d DENTRODE digitos:
+        nova_soma = soma + d * multiplicador
+        soma = nova_soma
+        novo_mult = multiplicador + 1
+        multiplicador = novo_mult
+    
+    resto = soma % 11
+    SE resto < 2:
+        RETORNAR 0
+    SENAO:
+        RETORNAR 11 - resto
+
+numero_base = 1234
+digito = calcular_digito(numero_base)
+ESCREVA(f"Número: {numero_base}")
+ESCREVA(f"Dígito verificador: {digito}")
+ESCREVA()
+
+# 9. Números em colunas (formatação)
+ESCREVA("--- Números em 5 Colunas ---")
+contador = 1
+PARA linha DENTRODE INTERVALO(4):
+    linha_texto = ""
+    PARA coluna DENTRODE INTERVALO(5):
+        novo_texto = linha_texto + f"{contador} "
+        linha_texto = novo_texto
+        novo_contador = contador + 1
+        contador = novo_contador
+    ESCREVA(linha_texto)
