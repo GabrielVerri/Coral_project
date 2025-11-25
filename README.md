@@ -32,6 +32,7 @@ coral programa.crl          # Executar
 coral --lex programa.crl    # Ver tokens
 coral --parse programa.crl  # Ver análise sintática
 coral --ast programa.crl    # Ver AST
+coral --llvmir programa.crl # Compilar para LLVM IR
 coral --help                # Ajuda
 coral --logo                # Ver logo
 ```
@@ -69,8 +70,9 @@ Coral_project/
 
 ## Documentação
 
-- **[instalacao.md](docs/guias/instalacao.md)** - Instalação e primeiros passos
-- **[Especificação](docs/especificacao_linguagem/)** - Gramática e sintaxe
+- **[Instalação](docs/guias/instalacao.md)** - Instalação e primeiros passos
+- **[Sintaxe](docs/sintaxe.md)** - Sintaxe completa da linguagem Coral
+- **[Especificação](docs/especificacao_linguagem/)** - Gramática formal
 - **[Lexer](src/lexer/README.md)** - Analisador léxico
 - **[Parser](src/parser/README.md)** - Analisador sintático
 - **[Diagramas AFD/AFN](docs/diagramas/)** - Autômatos
