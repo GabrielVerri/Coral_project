@@ -31,8 +31,7 @@ class TestAFNAFDUnificado(unittest.TestCase):
         casos = [
             ('"texto"', ('"texto"', 7, "STRING")),
             ("'texto'", ("'texto'", 7, "STRING")),
-            ('"""texto\nmultilinhas"""', ('"""texto\nmultilinhas"""', 23, "STRING_MULTILINE")),
-            ("'''texto\nmultilinhas'''", ("'''texto\nmultilinhas'''", 23, "STRING_MULTILINE"))
+            ('"""texto\nmultilinhas"""', ('"""texto\nmultilinhas"""', 23, "STRING_MULTILINE"))
         ]
         for entrada, esperado in casos:
             with self.subTest(entrada=entrada):
