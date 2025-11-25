@@ -11,6 +11,8 @@ Suporta:
 - Estruturas de decisão (SE, SENAO, SENAOSE)
 - Loops (ENQUANTO, PARA com INTERVALO)
 - Função ESCREVA para output
+- Funções definidas pelo usuário (declaração, parâmetros, retorno, chamadas)
+- Instrução RETORNAR
 """
 
 import sys
@@ -33,6 +35,9 @@ class LLVMCompiler:
         self.var_map = {}  # Mapeia nomes de variáveis para registradores LLVM
         self.string_counter = 0
         self.strings = {}  # Mapeia strings para constantes globais
+        self.functions = {}  # Mapeia nomes de funções para seus tipos/assinaturas
+        self.current_function = None  # Nome da função sendo compilada
+        self.function_params = {}  # Parâmetros da função atual
         
     def compile(self, ast):
         """
@@ -50,13 +55,16 @@ class LLVMCompiler:
         self.var_map = {}
         self.string_counter = 0
         self.strings = {}
+        self.functions = {}
+        self.current_function = None
+        self.function_params = {}
         
         # Cabeçalho LLVM
         self._emit_header()
         
         # Processa o programa
         if type(ast).__name__ == 'ProgramaNode':
-            # Primeira passada: coleta strings
+            # Primeira passada: coleta strings e funções
             self._collect_strings(ast)
             
             # Emite declarações de strings globais
@@ -65,20 +73,36 @@ class LLVMCompiler:
             # Emite declarações de funções externas (printf)
             self._emit_external_declarations()
             
-            # Função main
+            # Segunda passada: separa funções do código principal
+            funcoes = []
+            codigo_principal = []
+            
+            for decl in ast.declaracoes:
+                if type(decl).__name__ == 'FuncaoNode':
+                    funcoes.append(decl)
+                else:
+                    codigo_principal.append(decl)
+            
+            # Compila funções definidas pelo usuário
+            for funcao in funcoes:
+                self._compile_funcao(funcao)
+            
+            # Função main (código principal)
             self._emit_line("define i32 @main() {")
             self.indent_level += 1
+            self.current_function = 'main'
             self._emit_line("entry:")
             self.indent_level += 1
             
-            # Processa declarações
-            for decl in ast.declaracoes:
+            # Processa declarações do código principal
+            for decl in codigo_principal:
                 self._compile_node(decl)
             
             # Retorno da main
             self._emit_line("ret i32 0")
             self.indent_level -= 2
             self._emit_line("}")
+            self.current_function = None
         
         return '\n'.join(self.output)
     
@@ -216,6 +240,13 @@ class LLVMCompiler:
         elif node_type == 'BlocoNode':
             return self._compile_bloco(node)
         
+        elif node_type == 'RetornarNode':
+            return self._compile_retornar(node)
+        
+        elif node_type == 'FuncaoNode':
+            # Funções são compiladas separadamente, não inline
+            return None
+        
         else:
             # Nó não suportado - ignora
             return None
@@ -244,9 +275,29 @@ class LLVMCompiler:
     
     def _compile_chamada_funcao(self, node):
         """Compila uma chamada de função."""
-        # Por enquanto, apenas ESCREVA é suportado
+        # Funções nativas
         if node.nome == 'ESCREVA':
             return self._compile_escreva(node)
+        
+        # Funções definidas pelo usuário
+        if node.nome in self.functions:
+            func_info = self.functions[node.nome]
+            tipo_ret = func_info['tipo_retorno']
+            params_info = func_info['parametros']
+            
+            # Avalia argumentos
+            args_regs = []
+            for i, arg in enumerate(node.argumentos):
+                arg_reg = self._compile_node(arg)
+                if arg_reg:
+                    # Por enquanto assume que todos são i32
+                    args_regs.append(f"i32 {arg_reg}")
+            
+            # Chama função
+            result = self._new_temp()
+            args_str = ', '.join(args_regs) if args_regs else ''
+            self._emit_line(f"{result} = call {tipo_ret} @{node.nome}({args_str})")
+            return result
         
         return None
     
@@ -626,3 +677,187 @@ class LLVMCompiler:
         
         return None
 
+    
+    def _compile_funcao(self, node):
+        '''Compila uma fun��o definida pelo usu�rio.'''
+        nome = node.nome
+        parametros = node.parametros
+        tipo_retorno = node.tipo_retorno if hasattr(node, 'tipo_retorno') and node.tipo_retorno else None
+        
+        # Mapeia tipos Coral para LLVM
+        tipo_map = {
+            'INTEIRO': 'i32',
+            'DECIMAL': 'double',
+            'TEXTO': 'i8*',
+            'BOOLEANO': 'i1',
+            None: 'i32'
+        }
+        
+        # Constr�i assinatura da fun��o
+        tipo_ret_llvm = tipo_map.get(tipo_retorno, 'i32')
+        params_llvm = []
+        param_names = []
+        
+        for param in parametros:
+            param_nome = param.nome
+            param_tipo = param.tipo_anotacao if hasattr(param, 'tipo_anotacao') and param.tipo_anotacao else None
+            param_tipo_llvm = tipo_map.get(param_tipo, 'i32')
+            params_llvm.append(f'{param_tipo_llvm} %{param_nome}')
+            param_names.append((param_nome, param_tipo_llvm))
+        
+        # Registra fun��o
+        self.functions[nome] = {
+            'tipo_retorno': tipo_ret_llvm,
+            'parametros': param_names
+        }
+        
+        # Emite defini��o da fun��o
+        params_str = ', '.join(params_llvm) if params_llvm else ''
+        self._emit_line(f'define {tipo_ret_llvm} @{nome}({params_str}) {{')
+        self.indent_level += 1
+        self.current_function = nome
+        
+        # Entry label
+        self._emit_line('entry:')
+        self.indent_level += 1
+        
+        # Salva contexto de vari�veis
+        old_var_map = self.var_map.copy()
+        self.var_map = {}
+        
+        # Aloca espa�o para par�metros
+        self.function_params = {}
+        for param_nome, param_tipo in param_names:
+            param_ptr = self._new_temp()
+            self._emit_line(f'{param_ptr} = alloca {param_tipo}, align 4')
+            self._emit_line(f'store {param_tipo} %{param_nome}, {param_tipo}* {param_ptr}, align 4')
+            self.var_map[param_nome] = param_ptr
+            self.function_params[param_nome] = param_tipo
+        
+        # Compila corpo da fun��o
+        self._compile_node(node.bloco)
+        
+        # Retorno padr�o
+        if tipo_ret_llvm == 'i32':
+            self._emit_line('ret i32 0')
+        elif tipo_ret_llvm == 'double':
+            self._emit_line('ret double 0.0')
+        elif tipo_ret_llvm == 'i1':
+            self._emit_line('ret i1 false')
+        elif tipo_ret_llvm == 'i8*':
+            self._emit_line('ret i8* null')
+        
+        # Restaura contexto
+        self.var_map = old_var_map
+        self.function_params = {}
+        self.current_function = None
+        
+        self.indent_level -= 2
+        self._emit_line('}')
+        self._emit_line('')
+        
+        return None
+    
+    def _compile_retornar(self, node):
+        '''Compila uma instru��o RETORNAR.'''
+        if node.expressao is None:
+            self._emit_line('ret i32 0')
+        else:
+            valor_reg = self._compile_node(node.expressao)
+            if valor_reg:
+                self._emit_line(f'ret i32 {valor_reg}')
+            else:
+                self._emit_line('ret i32 0')
+        return None
+
+    
+    def _compile_funcao(self, node):
+        """Compila uma função definida pelo usuário."""
+        nome = node.nome
+        parametros = node.parametros
+        tipo_retorno = node.tipo_retorno if hasattr(node, 'tipo_retorno') and node.tipo_retorno else None
+        
+        # Mapeia tipos Coral para LLVM
+        tipo_map = {
+            'INTEIRO': 'i32',
+            'DECIMAL': 'double',
+            'TEXTO': 'i8*',
+            'BOOLEANO': 'i1',
+            None: 'i32'
+        }
+        
+        # Constrói assinatura da função
+        tipo_ret_llvm = tipo_map.get(tipo_retorno, 'i32')
+        params_llvm = []
+        param_names = []
+        
+        for param in parametros:
+            param_nome = param.nome
+            param_tipo = param.tipo_anotacao if hasattr(param, 'tipo_anotacao') and param.tipo_anotacao else None
+            param_tipo_llvm = tipo_map.get(param_tipo, 'i32')
+            params_llvm.append(f'{param_tipo_llvm} %{param_nome}')
+            param_names.append((param_nome, param_tipo_llvm))
+        
+        # Registra função
+        self.functions[nome] = {
+            'tipo_retorno': tipo_ret_llvm,
+            'parametros': param_names
+        }
+        
+        # Emite definição da função
+        params_str = ', '.join(params_llvm) if params_llvm else ''
+        self._emit_line(f'define {tipo_ret_llvm} @{nome}({params_str}) {{')
+        self.indent_level += 1
+        self.current_function = nome
+        
+        # Entry label
+        self._emit_line('entry:')
+        self.indent_level += 1
+        
+        # Salva contexto de variáveis
+        old_var_map = self.var_map.copy()
+        self.var_map = {}
+        
+        # Aloca espaço para parâmetros
+        self.function_params = {}
+        for param_nome, param_tipo in param_names:
+            param_ptr = self._new_temp()
+            self._emit_line(f'{param_ptr} = alloca {param_tipo}, align 4')
+            self._emit_line(f'store {param_tipo} %{param_nome}, {param_tipo}* {param_ptr}, align 4')
+            self.var_map[param_nome] = param_ptr
+            self.function_params[param_nome] = param_tipo
+        
+        # Compila corpo da função
+        self._compile_node(node.bloco)
+        
+        # Retorno padrão
+        if tipo_ret_llvm == 'i32':
+            self._emit_line('ret i32 0')
+        elif tipo_ret_llvm == 'double':
+            self._emit_line('ret double 0.0')
+        elif tipo_ret_llvm == 'i1':
+            self._emit_line('ret i1 false')
+        elif tipo_ret_llvm == 'i8*':
+            self._emit_line('ret i8* null')
+        
+        self.var_map = old_var_map
+        self.function_params = {}
+        self.current_function = None
+        
+        self.indent_level -= 2
+        self._emit_line('}')
+        self._emit_line('')
+        
+        return None
+    
+    def _compile_retornar(self, node):
+        """Compila uma instrução RETORNAR."""
+        if node.expressao is None:
+            self._emit_line('ret i32 0')
+        else:
+            valor_reg = self._compile_node(node.expressao)
+            if valor_reg:
+                self._emit_line(f'ret i32 {valor_reg}')
+            else:
+                self._emit_line('ret i32 0')
+        return None

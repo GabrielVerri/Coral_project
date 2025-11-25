@@ -111,29 +111,66 @@ class TestLLVMIRFuncoes:
         parser = ParserCoral(tokens)
         return parser.parse()
     
-    def test_declaracao_funcao(self):
-        """Testa parsing de declaração de função (geração LLVM não implementada)."""
-        codigo = """
-FUNCAO somar(a: INTEIRO, b: INTEIRO) -> INTEIRO:
-    RETORNAR a + b
-"""
+    def compile(self, codigo):
+        """Helper para compilar para LLVM IR."""
         ast = self.parse(codigo)
-        funcao = ast.declaracoes[0]
-        # Verifica que o AST foi criado corretamente
-        assert isinstance(funcao, FuncaoNode)
-        assert funcao.nome == 'somar'
-        assert len(funcao.parametros) == 2
+        compiler = LLVMCompiler()
+        return compiler.compile(ast)
+    
+    def test_funcao_simples(self):
+        """Testa declaração de função simples sem parâmetros."""
+        codigo = """
+FUNCAO saudacao():
+    ESCREVA("Ola")
+"""
+        ir = self.compile(codigo)
+        assert "define i32 @saudacao()" in ir
+        assert "ret i32 0" in ir
+    
+    def test_funcao_com_parametros(self):
+        """Testa função com parâmetros."""
+        codigo = """
+FUNCAO somar(a: INTEIRO, b: INTEIRO):
+    resultado = a + b
+    RETORNAR resultado
+"""
+        ir = self.compile(codigo)
+        assert "define i32 @somar(i32 %a, i32 %b)" in ir
+        assert "add" in ir
+        assert "ret i32" in ir
+    
+    def test_funcao_com_retorno(self):
+        """Testa função com RETORNAR."""
+        codigo = """
+FUNCAO dobro(x: INTEIRO) -> INTEIRO:
+    RETORNAR x * 2
+"""
+        ir = self.compile(codigo)
+        assert "define i32 @dobro(i32 %x)" in ir
+        assert "mul" in ir
+        assert "ret i32" in ir
     
     def test_chamada_funcao(self):
-        """Testa parsing de chamada de função (geração LLVM não implementada)."""
+        """Testa chamada de função definida pelo usuário."""
         codigo = """
-resultado = somar(10, 20)
+FUNCAO soma(a: INTEIRO, b: INTEIRO) -> INTEIRO:
+    RETORNAR a + b
+
+resultado = soma(10, 20)
 """
-        ast = self.parse(codigo)
-        atrib = ast.declaracoes[0]
-        # Verifica que é uma atribuição com chamada de função
-        assert isinstance(atrib, AtribuicaoNode)
-        assert isinstance(atrib.expressao, ChamadaFuncaoNode)
+        ir = self.compile(codigo)
+        assert "define i32 @soma(i32 %a, i32 %b)" in ir
+        assert "call i32 @soma(i32 10, i32 20)" in ir
+    
+    def test_funcao_sem_retorno_explicito(self):
+        """Testa função sem RETORNAR (retorno padrão)."""
+        codigo = """
+FUNCAO imprimir(n: INTEIRO):
+    ESCREVA(n)
+"""
+        ir = self.compile(codigo)
+        assert "define i32 @imprimir(i32 %n)" in ir
+        assert "ret i32 0" in ir
 
 
 # Teste funcional que pode rodar agora: verifica se AST está correta para futura geração de IR
