@@ -3,14 +3,14 @@ class AFDOperadoresAritmeticosRelacionais:
     def match(self, entrada):
         # testa lexemas em ordem de tamanho (maior primeiro para não confundir == com =)
         operadores = [
-            # Operadores Relacionais
+            # Operadores Relacionais (2 caracteres primeiro)
             ("==", "OPERADOR_RELACIONAL"),
             ("!=", "OPERADOR_RELACIONAL"),
             ("<=", "OPERADOR_RELACIONAL"),
             (">=", "OPERADOR_RELACIONAL"),
-            ("<", "OPERADOR_RELACIONAL"),
-            (">", "OPERADOR_RELACIONAL"),
-            # Operadores de Atribuição Composta
+            # Operador de Exponenciação (2 caracteres)
+            ("**", "OPERADOR_ARITMETICO"),
+            # Operadores de Atribuição Composta (2 caracteres)
             ("+=", "OPERADOR_ATRIBUICAO"),
             ("-=", "OPERADOR_ATRIBUICAO"),
             ("*=", "OPERADOR_ATRIBUICAO"),
@@ -18,15 +18,16 @@ class AFDOperadoresAritmeticosRelacionais:
             ("%=", "OPERADOR_ATRIBUICAO"),
             ("++", "OPERADOR_ATRIBUICAO"),
             ("--", "OPERADOR_ATRIBUICAO"),
-            # Operador de Exponenciação
-            ("**", "OPERADOR_ARITMETICO"),
-            # Operadores Aritméticos
+            # Operadores Relacionais (1 caractere)
+            ("<", "OPERADOR_RELACIONAL"),
+            (">", "OPERADOR_RELACIONAL"),
+            # Operadores Aritméticos (1 caractere)
             ("*", "OPERADOR_ARITMETICO"),
             ("/", "OPERADOR_ARITMETICO"),
             ("%", "OPERADOR_ARITMETICO"),
             ("+", "OPERADOR_ARITMETICO"),
             ("-", "OPERADOR_ARITMETICO"),
-            # Atribuição Simples
+            # Atribuição Simples (1 caractere)
             ("=", "OPERADOR_ATRIBUICAO"),
         ]
 

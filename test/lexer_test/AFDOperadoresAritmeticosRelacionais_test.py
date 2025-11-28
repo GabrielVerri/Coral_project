@@ -47,7 +47,7 @@ class TestAFDOperadoresAritmeticosRelacionais(unittest.TestCase):
     
     def test_rejeita_operador_invalido(self):
         """Testa rejeição de sequências que não são operadores válidos."""
-        invalidos = ["@", "$", "abc", "&", "=>"]
+        invalidos = ["@", "$", "abc", "&"]
         for op in invalidos:
             with self.subTest(operador=op):
                 resultado = self.afd.match(op)

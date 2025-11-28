@@ -3,9 +3,12 @@ Runner de testes para o projeto Coral.
 Wrapper simplificado para executar pytest com as configurações adequadas.
 
 Uso:
-    python test/run_tests.py           # Roda todos os testes
-    python test/run_tests.py -v        # Modo verboso
-    python test/run_tests.py --help    # Ajuda do pytest
+    python test/run_tests.py              # Roda todos os testes
+    python test/run_tests.py lexer        # Roda apenas testes do lexer
+    python test/run_tests.py parser       # Roda apenas testes do parser
+    python test/run_tests.py llvmir       # Roda apenas testes de LLVM IR
+    python test/run_tests.py -v           # Modo verboso
+    python test/run_tests.py --help       # Ajuda do pytest
 """
 import subprocess
 import sys
@@ -16,20 +19,36 @@ def run_tests():
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(project_root)
     
+    # Determina quais testes rodar
+    test_dirs = []
+    custom_args = []
+    
+    for arg in sys.argv[1:]:
+        if arg == "lexer":
+            test_dirs.append("test/lexer_test/")
+        elif arg == "parser":
+            test_dirs.append("test/parser_test/")
+        elif arg == "llvmir":
+            test_dirs.append("test/llvmir_test/")
+        else:
+            custom_args.append(arg)
+    
+    # Se não especificou nenhum diretório, roda todos
+    if not test_dirs:
+        test_dirs = ["test/lexer_test/", "test/parser_test/", "test/llvmir_test/"]
+    
     # Configuração padrão do pytest
     pytest_args = [
         sys.executable, "-m", "pytest",
-        "test/lexer_test/",
+        *test_dirs,
         "-v",                # Modo verboso (mostra cada teste)
         "--tb=short",        # Traceback curto em caso de erro
+        *custom_args,
     ]
     
-    # Adiciona argumentos extras do usuário (se houver)
-    if len(sys.argv) > 1:
-        pytest_args.extend(sys.argv[1:])
-    
-    print(f"Executando testes do Coral Lexer...")
+    print(f"=== Executando Testes do Coral ===")
     print(f"Diretório: {project_root}")
+    print(f"Testes: {', '.join(test_dirs)}")
     print(f"Comando: {' '.join(pytest_args[2:])}\n")
     
     # Executa pytest

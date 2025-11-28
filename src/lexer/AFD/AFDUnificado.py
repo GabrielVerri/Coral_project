@@ -145,7 +145,7 @@ class AFDUnificado:
             dois_chars = entrada[:2]
             if dois_chars in ["==", "!=", "<=", ">="]:
                 return (dois_chars, 2, "OPERADOR_RELACIONAL")
-            elif dois_chars in ["++", "--", "+=", "-=", "*=", "/="]:
+            elif dois_chars in ["++", "--", "+=", "-=", "*=", "/=", "%="]:
                 return (dois_chars, 2, "OPERADOR_ATRIBUICAO")
             elif dois_chars == "**":
                 return ("**", 2, "OPERADOR_ARITMETICO")

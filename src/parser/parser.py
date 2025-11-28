@@ -50,6 +50,7 @@ class ParserCoral:
         self.posicao = 0
         self.token_atual = tokens[0] if tokens else None
         self.first_follow = FirstFollowSets()
+        self.dentro_de_laco = 0  # Contador de profundidade de laços
     
     def avancar(self):
         if self.posicao < len(self.tokens) - 1:
@@ -611,7 +612,10 @@ class ParserCoral:
         token_enquanto = self.consumir('ENQUANTO')
         condicao = self.expressao()
         self.consumir(':', "Esperado ':' após condição do ENQUANTO")
+        
+        self.dentro_de_laco += 1
         bloco = self.bloco()
+        self.dentro_de_laco -= 1
         
         return EnquantoNode(condicao, bloco, token_enquanto.linha, token_enquanto.coluna)
     
@@ -624,7 +628,10 @@ class ParserCoral:
         self.consumir('DENTRODE', "Esperado 'DENTRODE' no laço PARA")
         iteravel = self.expressao()
         self.consumir(':', "Esperado ':' após expressão do PARA")
+        
+        self.dentro_de_laco += 1
         bloco = self.bloco()
+        self.dentro_de_laco -= 1
         
         return ParaNode(variavel, iteravel, bloco, token_para.linha, token_para.coluna)
     
@@ -732,11 +739,15 @@ class ParserCoral:
     def quebra(self):
         """Processa uma instrução QUEBRA."""
         token = self.consumir('QUEBRA')
+        if self.dentro_de_laco == 0:
+            raise ErroSintatico("QUEBRA só pode ser usado dentro de um laço (PARA/ENQUANTO)", token.linha, token.coluna)
         return QuebraNode(token.linha, token.coluna)
     
     def continua(self):
         """Processa uma instrução CONTINUA."""
         token = self.consumir('CONTINUA')
+        if self.dentro_de_laco == 0:
+            raise ErroSintatico("CONTINUA só pode ser usado dentro de um laço (PARA/ENQUANTO)", token.linha, token.coluna)
         return ContinuaNode(token.linha, token.coluna)
     
     def passar(self):
