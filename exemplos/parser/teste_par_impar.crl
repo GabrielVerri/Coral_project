@@ -4,7 +4,7 @@ ESCREVA("=== VERIFICADOR DE NÚMEROS PARES E ÍMPARES ===")
 ESCREVA("")
 
 # Solicita o número ao usuário
-numero = LER(ESCREVA("Digite um número inteiro:"))
+numero = LER("Digite um número inteiro:")
 
 # Converte a entrada para inteiro
 numero = INTEIRO(numero)

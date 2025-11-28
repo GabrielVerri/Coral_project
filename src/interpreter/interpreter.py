@@ -139,7 +139,10 @@ class InterpretadorCoral:
     def _registrar_funcoes_nativas(self):
         """Registra funções nativas (built-in) da linguagem."""
         # Função ESCREVA para imprimir na tela
-        self.ambiente_global.definir_funcao('ESCREVA', lambda *args: print(*args))
+        def escreva(*args):
+            print(*args)
+            return ""  # Retorna string vazia ao invés de None
+        self.ambiente_global.definir_funcao('ESCREVA', escreva)
         # Função LER para ler entrada do usuário
         self.ambiente_global.definir_funcao('LER', lambda prompt="": input(prompt))
         # Função TIPO para obter o tipo de uma variável
